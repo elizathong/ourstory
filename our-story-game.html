@@ -29,43 +29,6 @@
   }
   #app{ position:relative; width:100%; max-width:900px; }
 
-  /* ---------- Character Creator ---------- */
-  #creatorScreen{
-    display:flex; flex-direction:column; align-items:center; gap:14px;
-    padding:24px 16px; max-height:100vh; overflow-y:auto; touch-action:pan-y;
-    -webkit-overflow-scrolling:touch;
-  }
-  #creatorScreen h1{
-    font-family:'Press Start 2P',monospace;
-    font-size:20px; color:var(--coral); text-align:center;
-    text-shadow:2px 2px 0 #000; margin:0;
-  }
-  #creatorScreen p.sub{ font-size:20px; color:var(--cream); opacity:.8; margin:0 0 8px; text-align:center;}
-  #previewWrap{
-    background:rgba(0,0,0,.25); border:4px solid var(--coral-dark); border-radius:12px;
-    padding:16px;
-  }
-  #previewCanvas{ background:#3a2d52; border-radius:6px; }
-  .rowPicker{
-    display:flex; align-items:center; gap:14px; background:rgba(0,0,0,.25);
-    padding:10px 14px; border-radius:10px; width:min(90vw,300px); justify-content:space-between;
-  }
-  .rowPicker .label{ font-size:20px; width:80px; color:var(--coral);}
-  .rowPicker .value{ font-size:20px; flex:1; text-align:center; }
-  .arrowBtn{
-    background:var(--coral); border:none; color:#2a1030; font-weight:bold;
-    width:42px;height:42px;border-radius:50%; cursor:pointer; font-size:18px;
-    display:flex;align-items:center;justify-content:center; flex-shrink:0;
-  }
-  .arrowBtn:hover{ background:var(--coral-dark); color:var(--cream); }
-  #startBtn{
-    margin-top:10px; font-family:'Press Start 2P',monospace; font-size:13px;
-    background:var(--coral); color:#2a1030; border:none; padding:14px 26px;
-    border-radius:8px; cursor:pointer; box-shadow:0 4px 0 var(--coral-dark);
-  }
-  #startBtn:hover{ transform:translateY(2px); box-shadow:0 2px 0 var(--coral-dark); }
-  #startBtn:active{ transform:translateY(4px); box-shadow:none; }
-
   /* ---------- Game ---------- */
   #gameWrap{ display:none; flex-direction:column; align-items:center; width:100%; padding:0 8px; }
   #canvasColumn{ display:flex; flex-direction:column; align-items:center; width:100%; max-width:416px; }
@@ -147,36 +110,6 @@
 </head>
 <body>
 <div id="app">
-
-  <!-- ============ CHARACTER CREATOR ============ -->
-  <div id="creatorScreen">
-    <h1>OUR STORY</h1>
-    <p class="sub">Make your character before we begin &#9829;</p>
-    <div id="previewWrap"><canvas id="previewCanvas" width="128" height="128"></canvas></div>
-
-    <div class="rowPicker" data-cat="hat">
-      <button class="arrowBtn" data-dir="-1">&#8592;</button>
-      <span class="label">Hat</span><span class="value" id="val-hat"></span>
-      <button class="arrowBtn" data-dir="1">&#8594;</button>
-    </div>
-    <div class="rowPicker" data-cat="shirt">
-      <button class="arrowBtn" data-dir="-1">&#8592;</button>
-      <span class="label">Shirt</span><span class="value" id="val-shirt"></span>
-      <button class="arrowBtn" data-dir="1">&#8594;</button>
-    </div>
-    <div class="rowPicker" data-cat="shoes">
-      <button class="arrowBtn" data-dir="-1">&#8592;</button>
-      <span class="label">Shoes</span><span class="value" id="val-shoes"></span>
-      <button class="arrowBtn" data-dir="1">&#8594;</button>
-    </div>
-    <div class="rowPicker" data-cat="accessory">
-      <button class="arrowBtn" data-dir="-1">&#8592;</button>
-      <span class="label">Extra</span><span class="value" id="val-accessory"></span>
-      <button class="arrowBtn" data-dir="1">&#8594;</button>
-    </div>
-
-    <button id="startBtn">START GAME &#9829;</button>
-  </div>
 
   <!-- ============ GAME ============ -->
   <div id="gameWrap">
@@ -286,37 +219,6 @@ const STORY = {
 };
 /* ===================================================================== */
 
-/* ---------------- Character customization options ---------------- */
-const HATS = ["None","Cap","Beanie","Bow","Flower Crown"];
-const SHIRTS = ["Red","Blue","Green","Yellow","Purple"];
-const SHOES = ["White","Black","Brown","Red"];
-const ACCESSORIES = ["None","Glasses","Necklace","Flower"];
-const SHIRT_HEX = {Red:"#e05656",Blue:"#4d7fd1",Green:"#5a9e5a",Yellow:"#dfc453",Purple:"#8d5ac0"};
-const SHOE_HEX = {White:"#f2f2f2",Black:"#3a3a3a",Brown:"#7a5236",Red:"#c24545"};
-
-const character = { hat:0, shirt:0, shoes:0, accessory:0 };
-
-function cycle(arr, val, dir){ return (val + dir + arr.length) % arr.length; }
-
-function updateCreatorLabels(){
-  document.getElementById('val-hat').textContent = HATS[character.hat];
-  document.getElementById('val-shirt').textContent = SHIRTS[character.shirt];
-  document.getElementById('val-shoes').textContent = SHOES[character.shoes];
-  document.getElementById('val-accessory').textContent = ACCESSORIES[character.accessory];
-}
-
-document.querySelectorAll('.rowPicker').forEach(row=>{
-  const cat = row.dataset.cat;
-  const opts = cat==='hat'?HATS:cat==='shirt'?SHIRTS:cat==='shoes'?SHOES:ACCESSORIES;
-  row.querySelectorAll('.arrowBtn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      character[cat] = cycle(opts, character[cat], parseInt(btn.dataset.dir));
-      updateCreatorLabels();
-      drawPreview();
-    });
-  });
-});
-
 /* ---------------- Small helper: rounded rectangle path ---------------- */
 function rr(ctx,x,y,w,h,r){
   ctx.beginPath();
@@ -329,92 +231,33 @@ function rr(ctx,x,y,w,h,r){
 }
 
 /* ---------------- Drawing the character (shared by preview + game) ---------------- */
-function drawCharacter(ctx, x, y, scale, facing){
-  const s = scale;
-  const skin = "#f0c39a";
-  const shirtColor = SHIRT_HEX[SHIRTS[character.shirt]];
-  const shoeColor = SHOE_HEX[SHOES[character.shoes]];
-  const outline = "#2b2230";
-  const flip = facing === 'left';
-  const cx = x + s*4;
+/* Pokemon FireRed "red_normal" overworld sheet: 144x32px, 9 frames of 16x32px in a row.
+   0 face-S 1 face-N 2 face-W(mirror=E) 3-4 walk-S 5-6 walk-N 7-8 walk-W(mirror=E) */
+const PLAYER_SPRITE = new Image();
+PLAYER_SPRITE.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAAAgBAMAAAAPouz+AAAAMFBMVEWDe6Sse0H/xZTelHN7QUFBQdU5OXtzpMVqKSnu7v+0tNX/akrFOTn/3lq9nDkAAAAB5BI7AAAAAXRSTlMAQObYZgAAAmRJREFUSIntlD9r20AUwN8gireDkqFzY7IWIuHViiXcDsX+CsUOCgUTLSXd6hRMccDQrRDaT1D0BYo7luCoIvoEahfTLnEiaiHFIPL6nmTJsVoNXTr5IfjdO93d7/5xAJvYxCb+Uwwp/sZ/jcrX8fjz8Z8sFZSxMqY4XnGU5SWCUnHScZKzcrLMi4IyYUaIeUSXKpgTWJykLArKhLkYYuf8g+MyKVxY2MzJSlAQFYW5WDywLNt+7cMND/AWFlbKO4I1UVGYi0X9+enpu7kvtkZuPNnzxUcaadjOBUVRUZiLIagZRpc61p8Mh4O5D006Tb29EhRFReGSAPPdX4+26wCob+3pCKDV5fuKnwuKoqIwJ0hyoyqrtEbUdaQBpOr2Lo0rZYKUqpSJUqosbLAwI4SBLLdNYgtxSg1Bk5WWD9r+UpCImopUYxHnzK6aCVfc6SGedVRp58JxLjvUctC+mX0HzWQBmQQzVCRDR2xyvo+oG2omzCnJPds6k1VJ+eJ5TzVqMArNGe1JOCEBz5REI9OHkETTZOYkNPmUmgMSsthI2I4/vXcD4q3nXQd8Q9+Yg2syOLbVqAI0qrbl8JJY1PVFjcl7+tDozXiTR2edKvPeEeLBM+Krq6ufRBDz+i0vgQSaQjNXSMT5heddyr6QmZzLRsxCQLerMEXUj/r8I5q2mCBePOY9FyQIeCZtEvH/w9m3H3xqTG4X4MtDrjcj1JN+hk8fE9FIKnpm8lBFR5i+WHjQZxjTVlKB05bBFBgm/WIT04aYfCsC3ye+F2b29qWlqJ8NHPXTgsA7zctD+OulYr4evwEUQj7BqsZF7AAAAABJRU5ErkJggg==";
+const SPRITE_FW = 16, SPRITE_FH = 32;
+const SPRITE_FRAMES = {
+  down:  { idle: 0, walk: [3,4] },
+  up:    { idle: 1, walk: [5,6] },
+  left:  { idle: 2, walk: [7,8] },
+  right: { idle: 2, walk: [7,8], mirror: true }
+};
+
+function drawCharacter(ctx, x, y, scale, facing, walking){
+  if(!PLAYER_SPRITE.complete) return;
+  const set = SPRITE_FRAMES[facing] || SPRITE_FRAMES.down;
+  const frame = walking ? set.walk[Math.floor(Date.now()/150)%2] : set.idle;
+  const sx = frame * SPRITE_FW;
+  const dw = SPRITE_FW*scale, dh = SPRITE_FH*scale;
   ctx.save();
-  if(flip){ ctx.translate(x + s*8, 0); ctx.scale(-1,1); ctx.translate(-x,0); }
-
-  // ground shadow
-  ctx.fillStyle = "rgba(20,15,10,0.25)";
-  ctx.beginPath(); ctx.ellipse(cx, y+s*13.3, s*2.2, s*0.7, 0,0,Math.PI*2); ctx.fill();
-
-  ctx.lineWidth = s*0.26;
-  ctx.strokeStyle = outline;
-
-  // legs + shoes
-  ctx.fillStyle = "#4a4258";
-  rr(ctx, cx-s*1.7, y+s*9.2, s*1.5, s*2.4, s*0.4); ctx.fill(); ctx.stroke();
-  rr(ctx, cx+s*0.2, y+s*9.2, s*1.5, s*2.4, s*0.4); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = shoeColor;
-  rr(ctx, cx-s*1.8, y+s*11.3, s*1.7, s*1.3, s*0.4); ctx.fill(); ctx.stroke();
-  rr(ctx, cx+s*0.1, y+s*11.3, s*1.7, s*1.3, s*0.4); ctx.fill(); ctx.stroke();
-
-  // torso
-  ctx.fillStyle = shirtColor;
-  rr(ctx, cx-s*2.6, y+s*5.6, s*5.2, s*3.9, s*1.1); ctx.fill(); ctx.stroke();
-  // arms + hands
-  rr(ctx, cx-s*3.5, y+s*5.9, s*1.1, s*2.9, s*0.45); ctx.fill(); ctx.stroke();
-  rr(ctx, cx+s*2.4, y+s*5.9, s*1.1, s*2.9, s*0.45); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = skin;
-  ctx.beginPath(); ctx.ellipse(cx-s*3, y+s*8.9, s*0.6, s*0.55, 0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(cx+s*3, y+s*8.9, s*0.6, s*0.55, 0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-
-  // head
-  ctx.fillStyle = skin;
-  rr(ctx, cx-s*1.95, y+s*1.3, s*3.9, s*4, s*1.5); ctx.fill(); ctx.stroke();
-
-  // face (only when not facing up)
-  if(facing !== 'up'){
-    ctx.fillStyle = "#2b2230";
-    ctx.beginPath(); ctx.ellipse(cx-s*0.85, y+s*3.1, s*0.24, s*0.3, 0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx+s*0.85, y+s*3.1, s*0.24, s*0.3, 0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle = "#c98f6f"; ctx.lineWidth = s*0.18; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.arc(cx, y+s*3.6, s*0.6, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+  ctx.imageSmoothingEnabled = false;
+  if(set.mirror){
+    ctx.translate(x+dw, y);
+    ctx.scale(-1,1);
+    ctx.drawImage(PLAYER_SPRITE, sx, 0, SPRITE_FW, SPRITE_FH, 0, 0, dw, dh);
+  } else {
+    ctx.drawImage(PLAYER_SPRITE, sx, 0, SPRITE_FW, SPRITE_FH, x, y, dw, dh);
   }
-
-  // hair fringe
-  ctx.fillStyle = "#3a2b22";
-  rr(ctx, cx-s*2.05, y+s*1.05, s*4.1, s*1.15, s*0.8); ctx.fill(); ctx.stroke();
-
-  // hat
-  const hat = HATS[character.hat];
-  if(hat === "Cap"){
-    ctx.fillStyle = "#d15a5a";
-    rr(ctx, cx-s*2.15, y+s*0.35, s*4.3, s*1.4, s*0.9); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx+s*2, y+s*1.15, s*0.85, s*0.4, 0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  } else if(hat === "Beanie"){
-    ctx.fillStyle = "#5b8ade";
-    rr(ctx, cx-s*2.15, y+s*0.15, s*4.3, s*1.65, s*1.2); ctx.fill(); ctx.stroke();
-  } else if(hat === "Bow"){
-    ctx.fillStyle = "#ff6f91";
-    ctx.beginPath(); ctx.ellipse(cx-s*0.75, y+s*0.65, s*0.55, s*0.45, -0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx+s*0.75, y+s*0.65, s*0.55, s*0.45, 0.3,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  } else if(hat === "Flower Crown"){
-    ctx.fillStyle = "#e8cc5c";
-    for(let i=-1.5;i<=1.5;i++){ ctx.beginPath(); ctx.ellipse(cx+i*s*0.85, y+s*0.75, s*0.38, s*0.38, 0,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
-  }
-
-  // accessory
-  const acc = ACCESSORIES[character.accessory];
-  if(acc === "Glasses"){
-    ctx.strokeStyle = "#2b2230"; ctx.lineWidth = s*0.18;
-    ctx.beginPath(); ctx.ellipse(cx-s*0.85, y+s*3.1, s*0.5, s*0.44, 0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(cx+s*0.85, y+s*3.1, s*0.5, s*0.44, 0,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-s*0.33, y+s*3.1); ctx.lineTo(cx+s*0.33, y+s*3.1); ctx.stroke();
-  } else if(acc === "Necklace"){
-    ctx.strokeStyle = "#e8cc5c"; ctx.lineWidth = s*0.22; ctx.lineCap="round";
-    ctx.beginPath(); ctx.arc(cx, y+s*5.5, s*1.05, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
-  } else if(acc === "Flower"){
-    ctx.fillStyle = "#ff6f91";
-    ctx.beginPath(); ctx.ellipse(cx+s*2.4, y+s*6.1, s*0.5, s*0.5, 0,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  }
-
   ctx.restore();
 }
 
@@ -435,14 +278,6 @@ function drawNameTag(ctx, worldX, worldY, label){
   ctx.restore();
 }
 
-function drawPreview(){
-  const c = document.getElementById('previewCanvas');
-  const ctx = c.getContext('2d');
-  ctx.clearRect(0,0,c.width,c.height);
-  drawCharacter(ctx, 32, 20, 8, 'down');
-}
-updateCreatorLabels();
-drawPreview();
 
 /* =====================================================================
    GAME
@@ -902,8 +737,8 @@ function drawBadminton(){
   for(let ny=BM.hitTopY;ny<BM.groundY+4;ny+=8) gctx.fillRect(BM.netX-24, ny, 48, 2);
 
   // characters (simple friendly blobs using the existing character renderer)
-  drawCharacter(gctx, BM.playerX-16, BM.groundY-52, 3.6, 'right');
-  drawCharacter(gctx, BM.partnerX-16, BM.groundY-52, 3.6, 'left');
+  drawCharacter(gctx, BM.playerX-14.4, BM.groundY-57.6, 1.8, 'right', false);
+  drawCharacter(gctx, BM.partnerX-14.4, BM.groundY-57.6, 1.8, 'left', false);
 
   // shuttle
   const s = BM.shuttle;
@@ -1145,8 +980,8 @@ function draw(){
   }
 
   map.objs.forEach(drawObject);
-  drawCharacter(gctx, player.px, player.py-8, 4, player.facing);
-  drawNameTag(gctx, player.px+16, player.py-10, "You");
+  drawCharacter(gctx, player.px, player.py-32, 2, player.facing, player.moving);
+  drawNameTag(gctx, player.px+16, player.py-34, "You");
 
   if(debugCollision){
     for(let y=0;y<map.h;y++) for(let x=0;x<map.w;x++){
@@ -1191,16 +1026,13 @@ bindHold(document.getElementById('dbtn-left'),  ()=>keysDown["ArrowLeft"]=true, 
 bindHold(document.getElementById('dbtn-right'), ()=>keysDown["ArrowRight"]=true, ()=>keysDown["ArrowRight"]=false);
 document.getElementById('interactBtn').addEventListener('pointerdown', e=>{ e.preventDefault(); handleSpace(); });
 
-/* ---------------- Start button wiring ---------------- */
-document.getElementById('startBtn').addEventListener('click', ()=>{
-  document.getElementById('creatorScreen').style.display = 'none';
-  document.getElementById('gameWrap').style.display = 'flex';
-  document.getElementById('touchControls').style.display = 'flex';
-  gameCanvas = document.getElementById('gameCanvas');
-  gctx = gameCanvas.getContext('2d');
-  enterMap(0);
-  loop();
-});
+/* ---------------- Start the game immediately ---------------- */
+document.getElementById('gameWrap').style.display = 'flex';
+document.getElementById('touchControls').style.display = 'flex';
+gameCanvas = document.getElementById('gameCanvas');
+gctx = gameCanvas.getContext('2d');
+enterMap(0);
+loop();
 </script>
 </body>
 </html>
