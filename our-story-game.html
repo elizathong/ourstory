@@ -387,31 +387,31 @@ const MAPS = [];
   function block(x,y){ grid[y][x]=2; }        // generic solid obstacle
   function blockRect(x0,y0,x1,y1){ for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++) block(x,y); }
 
-  // borders: trees top rows, left columns, right columns (confirmed full-height on right)
+  // Coordinates below were measured directly against the actual 768x640 image (pixel-bounding-box
+  // and gridline verification), not derived from doubling the old approximate single-scale boxes.
+
+  // borders: trees top rows, left columns, right columns
   blockRect(0,0,w-1,1);
   for(let y=0;y<h;y++){ block(0,y); block(1,y); block(w-2,y); block(w-1,y); }
 
-  // the house (roof + walls), columns 6-17, rows 4-11 — door carved out separately below
-  blockRect(6,4,17,11);
+  // the house (roof + walls), columns 9-16, rows 6-10 — door carved out separately below
+  blockRect(9,6,16,10);
 
-  // red berry bushes, top-left area
-  blockRect(4,4,9,5);
+  // mailbox, left of the house
+  blockRect(8,9,8,10);
 
-  // wooden sign post, left of the bushes
-  blockRect(4,6,5,7);
+  // red flower bushes, staggered, top-left area
+  block(4,3); block(6,3); block(5,4); block(7,4);
 
-  // mailbox / moving truck, left of the house
-  blockRect(4,8,5,11);
+  // wooden sign post, below the bushes
+  block(4,5);
 
-  // fence line, right side — leaving a gate open at the sign post (columns 18-19)
-  blockRect(14,14,15,15); blockRect(16,14,17,15); blockRect(20,14,21,15);
-
-  // two small bushes near bottom-right of the fence
-  blockRect(16,18,17,19); blockRect(18,18,19,19);
+  // fence line, columns 13-18
+  blockRect(13,16,18,16);
 
   const exits = [];
   function markDoor(x,y,to,entry){ grid[y][x]=6; exits.push({x,y,to,entry}); }
-  markDoor(20,18,1,undefined);  // clear gap on the bottom-right -> onward into Chapter 1
+  markDoor(20,17,1,undefined);  // open grass east of the fence -> onward into Chapter 1
 
   MAPS.push({ w, h, grid, exits, theme:'day', entry:[12,12], banner:"Heading Out",
     objs:[], customBg:true });
