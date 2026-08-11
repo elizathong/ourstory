@@ -283,7 +283,7 @@ function drawCharacter(ctx, x, y, scale, facing, walking, sprite){
   sprite = sprite || PLAYER_SPRITE;
   if(!sprite.complete) return;
   const set = SPRITE_FRAMES[facing] || SPRITE_FRAMES.down;
-  const frame = walking ? set.walk[Math.floor(Date.now()/150)%2] : set.idle;
+  const frame = walking ? set.walk[Math.floor(Date.now()/133)%2] : set.idle; // half of the 267ms per-tile walk pace
   const sx = frame * SPRITE_FW;
   const dw = SPRITE_FW*scale, dh = SPRITE_FH*scale;
   ctx.save();
@@ -599,7 +599,7 @@ function pollMovement(){
 }
 
 function updatePlayerPixels(){
-  const speed = 5;
+  const speed = 2; // authentic FireRed walk pace: 1 tile per 16 GBA frames (~267ms @ 60fps)
   if(player.moving){
     if(player.px < player.targetPx) player.px = Math.min(player.px+speed, player.targetPx);
     if(player.px > player.targetPx) player.px = Math.max(player.px-speed, player.targetPx);
