@@ -78,6 +78,37 @@
   #dbtn-down{ top:88px; left:44px; }
   #dbtn-left{ top:44px; left:0; }
   #dbtn-right{ top:44px; left:88px; }
+
+  /* ---------- Room editor ---------- */
+  #toolRow{ display:flex; gap:10px; margin-top:14px; }
+  .toolBtn{
+    font-size:12px; background:rgba(255,255,255,.1); color:var(--cream);
+    border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 12px; cursor:pointer;
+  }
+  .toolBtn.active{ background:var(--coral); color:#2a1030; border-color:var(--coral); }
+  #editorPanel{
+    display:none; flex-direction:column; align-items:center; gap:10px;
+    width:min(92vw,380px); margin-top:14px; background:rgba(0,0,0,.25);
+    border-radius:12px; padding:12px;
+  }
+  #editorPanel.open{ display:flex; }
+  .editorTabs{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .paletteItem{
+    width:44px; height:44px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2);
+    border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden;
+  }
+  .paletteItem.active{ border-color:var(--coral); background:rgba(255,111,145,.2); }
+  .paletteItem img{ max-width:36px; max-height:36px; image-rendering:pixelated; }
+  .paletteItem span{ font-size:9px; opacity:.7; }
+  #sheetScroll{
+    width:100%; max-height:260px; overflow:auto; background:rgba(0,0,0,.3);
+    border-radius:8px; touch-action:pan-y pan-x;
+  }
+  #sheetCanvas{ display:block; image-rendering:pixelated; cursor:crosshair; }
+  #selInfo{ font-size:12px; opacity:.8; }
+  .editorModeRow{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .editorActions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  #editorHelp{ font-size:11px; opacity:.6; text-align:center; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -98,6 +129,28 @@
       <div class="dbtn" id="dbtn-left">&#9664;</div>
       <div class="dbtn" id="dbtn-right">&#9654;</div>
       <div class="dbtn" id="dbtn-down">&#9660;</div>
+    </div>
+    <div id="toolRow">
+      <button class="toolBtn" id="editToggleBtn">Edit Room</button>
+      <button class="toolBtn" id="collisionToggleBtn">Show Collision</button>
+    </div>
+    <div id="editorPanel">
+      <div class="editorTabs" id="paletteRow"></div>
+      <input type="file" id="uploadInput" accept="image/*" style="display:none">
+      <button class="toolBtn" id="uploadBtn">+ Upload furniture</button>
+      <div class="editorModeRow">
+        <button class="toolBtn" data-mode="place">Place</button>
+        <button class="toolBtn" data-mode="erase">Erase</button>
+        <button class="toolBtn" data-mode="wall">Mark Wall</button>
+        <button class="toolBtn" data-mode="floor">Mark Floor</button>
+      </div>
+      <div id="selInfo">Pick an item, then tap the room to place it.</div>
+      <div class="editorActions">
+        <button class="toolBtn" id="saveRoomBtn">Save</button>
+        <button class="toolBtn" id="resetRoomBtn">Reset to default</button>
+        <button class="toolBtn" id="closeEditorBtn">Close</button>
+      </div>
+      <div id="editorHelp">Place: pick furniture below, tap the room to drop it.<br>Erase: tap a placed item to remove it.<br>Wall / Floor: tap empty floor tiles to block or unblock them (for walls without art).<br>Don't forget Save, or your layout resets on reload.</div>
     </div>
   </div>
 </div>
@@ -173,9 +226,9 @@ NAMES.forEach(n=>{
 const TILE_SRC = {
   wall: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAR0lEQVR4nGO0sgr4Pz1ImoFcwES2TihgYWBgYHhx9B1lBkhYC5FtAMVeGAYGUBwL1HEBJdE48F6gThgc19enzIBdu06QbQAAP4YO8YWit18AAAAASUVORK5CYII=",
   floor: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfklEQVR4nGO8embafwYs4PvLVwzCanoMDAwMDG9vXWLgFBfDqoYJm2ZSwDAwgIVYhd9fvsJuAC4JZACLDXTw9tYlBhZckoKiUgQNZvz7irAXPry4gFee5e2tSwRdwCEggFXNjw8fGFhwpTBiwcCng4E3AGdCQo6+Hx8+4DQAAMKCKxyFUzEFAAAAAElFTkSuQmCC",
-  bed: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAABACAYAAABcIPRGAAACEUlEQVR4nO2Zu0oDQRSG/4itVYoIFmlWYhMRLyALRkNg67zAvoFJHawtJKWmEwTxAUwtXiM7WEQRRTFoI8RLCBhFUNBiLXTjxmgS9ozMDpkPFnaHHDj//DOTwxxAYuYy8+gRnQSFmekJ0SnQeHt5kNsBAEqAcJQAkTw+1OQW8FSTXMDuXlFuAeX7Cnp/Dup6UkAqncNYvv5evqs0OqDrScTjOgDYfnxGolrDBEciA98OOMnv7DDbstbx/lojzBN/TopHSGdy9khUCwBJMJZHMNjX6ICTvF9ZXJjF8emV7XxXq8+/b2K/zT4ADI+PNo2VSjdyn0Kl0q3cAgDJSwlACRCP9AKaSolOOSkecUtibCrh+ejuXgcAIJ3JcUnCshKeY0kCACAWGyLFFwoXpPjuXkIAMDmpHCBBdiCbzXNIwztkASnTIMUvrW2Q4qVfQkqASBjL0wVsH5wHAHh6vmJJkDfx2WUZy6veSgoed1BSLyFACRCPEiAaJUA0SoBolADRkGshQGxfzbMAV8PBbvW7TqA0VEgO7G6uUMK5IP0eUAJEowSIpknA4f4W1+YFL/7KqX6MauEQrq4rbQP8gBYOgbHP9x73YMo0uDUt/oN0JoeUaUALhwB8VgB1BwbD/QDgaxHOPayTK9Dmn5jafeFFqx6C9KdQSweo3RdedJUDAQB2yjSwtLYhvPvixtVIabgQ/gA3orSMIQTQKAAAAABJRU5ErkJggg==",
+  bed: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAwCAYAAABwrHhvAAAAxElEQVR4nGOUE9H9zzCAgIWBgYGhK0V9QCwvm3MT4gAGBgaG8O+2dLV8JedhBgYGBoQDGBgYGB4nK9PFctm5d+FsFnRJUQkZmlr++sUTFD4TTW0jAow6YNQBow4YcAdgFEToBQVdHYBcRNILDHgUjDoAJQ3ceniPLpaqySthdwCyBL3AgEfBqAMG3AGjuWDAo2DUAQPugNFcMOBRMOqAAXfAaC4Y8CgYdcCAOwCeCGHjdvQGAx4CjF1xDgM6VjzgITDqAAAhIyNhumvbKwAAAABJRU5ErkJggg==",
   desk: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAYAAAAbifjMAAACFklEQVR4nO2TP2wSYRjGf0c+KgVSKvKn0VgoaUhNo0OjiamJpqSlCZNxaOxgu7i6GEfj4uqqJh2MuhgX48TQAbYmLg6YJgYJLa02ItAAufLnoJwDHPYAWxJMXPpb7rvvfd7ne+69O+ndyxec8p+RtMXS8kMqpRKHh3VqitIW1Os1Go0GilJlY+Njl4EIBlcwDg3h950nntxT87msXiCMyHKRhYVbktU6wvr6W30dUGuKQjy5x/tXT/5UTDadcHFxVb1+9ZIEKzoTSS3nVYBCJoPN6SS5kyKV2MQzOQ3AqN2F3TFGYTfB0v2nAJJmMDt7GxGNhJkLhNqOqcRm876VIBmPYXeMteu1mkIgsMyw2YLvohuD+3OVaCSsixuNhNnP/uwamCwXqVYrqhBGtaYoajpfVkWXCnQJOjHPe2kA9m8Gbp5NY/hwZ0on8ExOE42EScZjJOMxRu2unkb5XJYLU17Eje0t5gIhCpkMAL5xD75xz18TdGI4OkBoPr82Ey3FcQhNPHP5GoDujfj8V05MILT4b0KPAFgNP8PmdFLYTTSvre+jE1ku8uPrNtLrmbvqice0WDNVMM97AdhP/8L0pYRYM1X67cdqHaHRWtvdLnCD0Bz7odFjTxS+l5koW9gaPmCibKHzb+zF6DlHWy+e+3NArlXKHdd3hJ22Xsjpgz6beiMefzozmMGDe8GBDAwDdZ8a/BuD3yZwyFCbU8aYAAAAAElFTkSuQmCC",
-  couch: "data:image/png;base64,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",
+  couch: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAABACAYAAAB7jnWuAAAC6klEQVR4nO2Zz0vbYBzGP5Gw0hLFajdHrRa0K8iYExn+qFCHQweeHEKZBw877LCDF2/7O4TtuIOHjcHYTh4mk22HiTJE3EFQ5yjWMlzbSBuUtozsoCmtzmneuIbNPhDy5uV93vfJE/J9v98EKrjokAAiY5OFjlw2Sz6XJZ/LlUVAVWRsEl9TI4AO6JccDj2fy+nG9d8+5HrPZWJb23rk/mhZ7vgo5GTihx4K97O3n7VHwG4yAYDL6bBHgNGwzQGjkVIztgiosmXVYgGalkaNq/YJsG3lioBDyMUXalxldWOF3WSC2npPWc5SZGxS300m6O0e4Mata6bvYG1ti2CwSdyBWHSTyPgD6tzVQsHIpTgtBbHCIxANxSk1YymMn0sorjjw7zugxlXq3NXCk1hyQFFqAPHteE/bF14cDnfD+YU54QmWlxYtCZABersHmHn9yjS5tt5DR2cXnz5+wEjtzPILj+D24DAuxWl6EoBQuF+IByAHW5ql+YU5XdPSpsmKUlPYVET5stfjoO9mD1PTb/H5W44NikU3mRgfOmWqgOnFDcj5nwehwOdvIRbdPDbgd6LOE1IoNKIP3hnB7XWfOR8ATm2fdG4LtBfWmn335kCAotSUNR/48nmd+YU5NC198BoO3xstaz7Qer0Zt3eUl9PP7NsLjMh7cXfDigP/jwOxrR18Xo9p3rk5sLy0iEtxCmdUlhyIxRN0dHYJ8S07kFIzJemYqIPCDqTUTCEdC4X7y+8AUJKG2eJAcRZkiwPFsMWBYlQcsOSASG1Y/G3RCt9SbWhwrfCrNC3N6saKafLqxgqalsYqXwZoC7Sbqu+M9NqoI6zwpUcPH/M1uq2bqQ33tH3ez87gvVInAcR3UkL8Vn+jJDc1uAh39jA1/eJMZAMT40N8204CcLcvKMyXnj99Agc/kErqw+Ka8KR+Dv+6WeGXCDAGGwqLcUJ/iQARvhGIJID16HcC/gaM9jX/Vf7Uf1SIBX4F9uEXh0ooveDddCwAAAAASUVORK5CYII=",
   plant: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAYAAAAbifjMAAAD3UlEQVR4nO2Vz08cZRjHP++yu91dhu3MsLul/KgNHdGGBEIkWhKODTQ9eDHWlKRNJZr4sx71L+jFk6ZRo0nb9IBeSPBCCCYeekBMUMKBkMKApawuLHRn2Z390WF3Xg/THUsx8eDBi8/pmfd53u/7/X6fvPPCvwzxTw0jV8cBqNkOrlPHyVWYm5s6CjBydRwnV8F16tRsh7AeJaxHaU7WKO0GJYBt5mgxEEUTH0QAvHr9TU6kKmyuxqRt5gCIv9Qi3P2QBOi7tA+AVaizchOiHSFR+f2AubkpgiNXx4npDjvZqHz9rTTz6RjWvor9U0AqQy7BsmBjqwWAYFnQ+RqkJy0Za48IgCBAbiMs+y7tM5+OUcxoBIGuCznOdZa5X2jht1/jFM2/7EoMapT/qOADAMzdqD/JLBRDp7qpMX8OtDiohkVmxqsqho4UdRHWo54HDfPCelQqQy61FcHegsXZD6CY0ahuQigBMinp7ipiFepszehw7LGwl0sEZu/eouFwbUVQzXtUtXgTAHsLlq9/Y6sFa19FGXKxl0sSIADg5CrE2iNib8EiokoUQ2fuRp30pMWAbpKZ8UDErkDsCoJl75CwFvI8UAydmFoh1q4RSkAoIVH7Pfo9JFnTdaqb0mejGLpvZAAgGJGU81HZM1JANbym6iYEz0ruJU4TUb3NiUGNtisqtpnDflgRsfaox8CtQ0SVvBAv8sP9Dn9kfV0FrON1rKRK53Ma6UmLBJp3QLbKj1PfeQwCTVDNC25/EiM9aYFwRGO0eVPzNTdMDWshfyEIUKsKnFxFhJUIXfEQ62tFefKCRouh+QY2tDvbZeFYVf8uBABm794i7IQYOtPKTkHIiY9fJjNjkZnxppAY1Ljzdi9s1+jtjKMocR800Egc5zG/rBfl1++/yKe3FwB4Y3Cfnu4kewsWn32/ws3LXaylq9JxHh8FiIdcbLvgFwZ0k7ZI3M8bYdsF4iH3KECtdsBAKoCTKzHWn4JgD/dWm1h9qEGwx1sDBlIBarUDH8C/TACLWZe15QzP957ko9OthPVmnFzJr68tZ1jMuqjHOAqQfyJr2syDmWesP0US2H3wCICJpSzP9h6SANDWLMRi1uWioTKxlGVtOcPEUpaJpSwXDZXFrEtbszj0Hz30cf3aO9TzWTnWnyL5lITdB4/IlxymzTxNakp8fuerv2fQ0aowPHrep/u0/mkzz/DoeTpalae3HDbxlNHN3vaOGB49L699M8tAKsBi1hvZh1dG2NveEaeM7kMAR96Fb7/8gp+X1nGrJczNbQASbSfQjyu80n+Gy+++9+yW/+M/jz8BFh+ureV+e20AAAAASUVORK5CYII=",
   window: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAYAAAAbifjMAAAA90lEQVR4nGNgGAUDDxitrAJI1nTs2AY4m4WBgeE/qZYic1gm+LEQpevltdcM7XcEMcRZHh56RJQB3z78YmBgwGLAtw+/GMynbcCpUUFDguHzm18M28LssMoz4bMVpvntm3c41eA0gBjNOA0gVjNWA0jRzMAASQcMn3aUwAUu7SBKH6oBL6+9Jk0XugGqRQsJKjyZFYBVHG80EgOIMkBBQ4J8A2CxQpYBdEmJLFwCbAyXq8IwJC7j0sCCmv1ZOEQ48dqADHj+8DH8+fMb1YAfb74Tpfnbh18MDDwMDCwsrKgGzP6jQaT12IVZGNDKuBEIGBsaOigyAADSNFg5qqIs6AAAAABJRU5ErkJggg==",
   painting: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAg0lEQVR4nGNgGAWjgAqAkRxNVlYB+A1AVoANcHIyM3z//vc/AwMDAwsedf9xSXz//pdBXZWfgZABDPOmTYCzbzw4wKCh4MBw48EBFDX4vPDfzk4Dn/mEXcDAwMDQ0NDAkHPsGE55JkIG5Bw7xlAipMQwSb+QgYGBAU6XCCkxlAgpMQAAsbEdTYjYDpAAAAAASUVORK5CYII="
@@ -195,27 +248,65 @@ for(let y=0;y<ROOM_H;y++){
   roomGrid.push(row);
 }
 
-const PROPS = [
-  { img:'bed',   x:1, y:1, wT:3, hT:4 },
+const DEFAULT_PROPS = [
+  { img:'bed',   x:1, y:1, wT:2, hT:3 },
   { img:'desk',  x:7, y:1, wT:1, hT:2 },
-  { img:'plant', x:7, y:4, wT:1, hT:2 },
-  { img:'couch', x:1, y:5, wT:3, hT:4 }
+  { img:'plant', x:7, y:7, wT:1, hT:2 },
+  { img:'couch', x:1, y:5, wT:2, hT:4 }
 ];
-PROPS.forEach(p=>{
-  for(let yy=p.y; yy<p.y+p.hT; yy++) for(let xx=p.x; xx<p.x+p.wT; xx++){
-    if(yy<ROOM_H && xx<ROOM_W) roomGrid[yy][xx] = 1;
-  }
-});
-
 const WALL_DECOR = [
   { img:'painting', x:2, y:0, wT:1, hT:1 },
   { img:'window',   x:5, y:0, wT:1, hT:2 }
 ];
-roomGrid[1][5] = 1; // keep the floor under the window clear of furniture, but not walkable
+let PROPS = [];
+let manualWalls = []; // [[x,y], ...] extra collision tiles set via the editor
+
+function rebuildGrid(){
+  for(let y=0;y<ROOM_H;y++){
+    for(let x=0;x<ROOM_W;x++){
+      roomGrid[y][x] = (x===0||x===ROOM_W-1||y===0||y===ROOM_H-1) ? 1 : 0;
+    }
+  }
+  roomGrid[1][5] = 1; // keep the floor under the window clear of furniture, but not walkable
+  PROPS.forEach(p=>{
+    for(let yy=p.y; yy<p.y+p.hT; yy++) for(let xx=p.x; xx<p.x+p.wT; xx++){
+      if(yy>=0 && yy<ROOM_H && xx>=0 && xx<ROOM_W) roomGrid[yy][xx] = 1;
+    }
+  });
+  manualWalls.forEach(([x,y])=>{
+    if(y>=0 && y<ROOM_H && x>=0 && x<ROOM_W) roomGrid[y][x] = 1;
+  });
+}
 
 function isBlocked(cx,cy){
   if(cx<0||cy<0||cx>=ROOM_W||cy>=ROOM_H) return true;
   return roomGrid[cy][cx] === 1;
+}
+
+const STORAGE_KEY = 'ourstory_room_v1';
+let customAssets = {}; // name -> data URL, for player-uploaded furniture
+
+function loadConfig(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){}
+  if(saved && saved.customAssets){
+    customAssets = saved.customAssets;
+    Object.keys(customAssets).forEach(name=>{
+      const img = new Image(); img.src = customAssets[name]; TILE_IMG[name] = img;
+    });
+  }
+  PROPS = (saved && saved.props) ? saved.props : DEFAULT_PROPS.map(p=>({...p}));
+  manualWalls = (saved && saved.manualWalls) ? saved.manualWalls : [];
+  rebuildGrid();
+}
+
+function saveConfig(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ props:PROPS, manualWalls, customAssets }));
+}
+
+function resetConfig(){
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 }
 
 const DIRS = ['down','up','left','right'];
@@ -290,6 +381,18 @@ function draw(){
     const img = TILE_IMG[d.img];
     gctx.drawImage(img, 0,0,d.wT*NATIVE,d.hT*NATIVE, d.x*TILE, d.y*TILE, d.wT*TILE, d.hT*TILE);
   });
+  if(debugCollision){
+    gctx.fillStyle = 'rgba(255,0,60,.45)';
+    for(let y=0;y<ROOM_H;y++) for(let x=0;x<ROOM_W;x++){
+      if(roomGrid[y][x]===1) gctx.fillRect(x*TILE, y*TILE, TILE, TILE);
+    }
+  }
+  if(editorOpen){
+    gctx.strokeStyle = 'rgba(255,255,255,.18)';
+    gctx.lineWidth = 1;
+    for(let x=0;x<=ROOM_W;x++){ gctx.beginPath(); gctx.moveTo(x*TILE,0); gctx.lineTo(x*TILE,ROOM_H*TILE); gctx.stroke(); }
+    for(let y=0;y<=ROOM_H;y++){ gctx.beginPath(); gctx.moveTo(0,y*TILE); gctx.lineTo(ROOM_W*TILE,y*TILE); gctx.stroke(); }
+  }
 }
 
 function loop(){
@@ -306,9 +409,150 @@ function bindHold(el, onDown, onUp){
   el.addEventListener('pointercancel', ()=>{ el.classList.remove('pressed'); onUp(); });
 }
 
+let debugCollision = false;
+let editorOpen = false;
+let editorMode = 'place';
+let selectedAsset = null; // {key, w, h}
+const BASE_ASSETS = [
+  {key:'bed', label:'Bed', w:2, h:3},
+  {key:'desk', label:'Desk', w:1, h:2},
+  {key:'couch', label:'Couch', w:2, h:4},
+  {key:'plant', label:'Plant', w:1, h:2},
+  {key:'window', label:'Window', w:1, h:2},
+  {key:'painting', label:'Painting', w:1, h:1}
+];
+
+function renderPalette(){
+  const row = document.getElementById('paletteRow');
+  row.innerHTML = '';
+  const items = BASE_ASSETS.concat(Object.keys(customAssets).map(key=>({key, label:'Yours', w:2, h:2})));
+  items.forEach(item=>{
+    const el = document.createElement('div');
+    el.className = 'paletteItem' + (selectedAsset && selectedAsset.key===item.key ? ' active' : '');
+    const img = document.createElement('img');
+    img.src = TILE_SRC[item.key] || customAssets[item.key];
+    el.appendChild(img);
+    el.title = item.label;
+    el.addEventListener('click', ()=>{
+      selectedAsset = { key:item.key, w:item.w, h:item.h };
+      editorMode = 'place';
+      updateModeButtons();
+      renderPalette();
+      updateSelInfo();
+    });
+    row.appendChild(el);
+  });
+}
+
+function updateModeButtons(){
+  document.querySelectorAll('.editorModeRow .toolBtn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode===editorMode);
+  });
+}
+
+function updateSelInfo(){
+  const info = document.getElementById('selInfo');
+  if(editorMode==='place') info.textContent = selectedAsset ? `Placing: ${selectedAsset.key}. Tap the room.` : 'Pick an item above first.';
+  else if(editorMode==='erase') info.textContent = 'Tap a placed item to remove it.';
+  else if(editorMode==='wall') info.textContent = 'Tap a floor tile to block it.';
+  else if(editorMode==='floor') info.textContent = 'Tap a marked tile to unblock it.';
+}
+
+function tileFromEvent(e){
+  const rect = gameCanvas.getBoundingClientRect();
+  const scaleX = gameCanvas.width / rect.width;
+  const scaleY = gameCanvas.height / rect.height;
+  const px = (e.clientX - rect.left) * scaleX;
+  const py = (e.clientY - rect.top) * scaleY;
+  return { x: Math.floor(px/TILE), y: Math.floor(py/TILE) };
+}
+
+function onCanvasEdit(e){
+  if(!editorOpen) return;
+  const {x,y} = tileFromEvent(e);
+  if(x<0||y<0||x>=ROOM_W||y>=ROOM_H) return;
+  if(editorMode==='place'){
+    if(!selectedAsset) return;
+    const w = selectedAsset.w, h = selectedAsset.h;
+    PROPS.push({ img:selectedAsset.key, x: Math.min(x, ROOM_W-1-w), y: Math.min(y, ROOM_H-1-h), wT:w, hT:h });
+  } else if(editorMode==='erase'){
+    for(let i=PROPS.length-1;i>=0;i--){
+      const p = PROPS[i];
+      if(x>=p.x && x<p.x+p.wT && y>=p.y && y<p.y+p.hT){ PROPS.splice(i,1); break; }
+    }
+  } else if(editorMode==='wall'){
+    if(!manualWalls.some(([mx,my])=>mx===x&&my===y)) manualWalls.push([x,y]);
+  } else if(editorMode==='floor'){
+    manualWalls = manualWalls.filter(([mx,my])=>!(mx===x&&my===y));
+  }
+  rebuildGrid();
+}
+
+function initEditor(){
+  renderPalette();
+  updateModeButtons();
+  updateSelInfo();
+
+  document.getElementById('editToggleBtn').addEventListener('click', ()=>{
+    editorOpen = !editorOpen;
+    document.getElementById('editorPanel').classList.toggle('open', editorOpen);
+    document.getElementById('editToggleBtn').classList.toggle('active', editorOpen);
+  });
+  document.getElementById('collisionToggleBtn').addEventListener('click', ()=>{
+    debugCollision = !debugCollision;
+    document.getElementById('collisionToggleBtn').classList.toggle('active', debugCollision);
+  });
+  document.querySelectorAll('.editorModeRow .toolBtn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      editorMode = b.dataset.mode;
+      if(editorMode!=='place') selectedAsset = null;
+      updateModeButtons();
+      renderPalette();
+      updateSelInfo();
+    });
+  });
+  document.getElementById('uploadBtn').addEventListener('click', ()=>document.getElementById('uploadInput').click());
+  document.getElementById('uploadInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      let w = parseInt(prompt('How many tiles wide (1-4)?','2'),10);
+      let h = parseInt(prompt('How many tiles tall (1-4)?','2'),10);
+      if(!w || w<1) w=1; if(w>4) w=4;
+      if(!h || h<1) h=1; if(h>4) h=4;
+      const key = 'custom_' + Date.now();
+      customAssets[key] = reader.result;
+      const img = new Image(); img.src = reader.result; TILE_IMG[key] = img;
+      selectedAsset = { key, w, h };
+      editorMode = 'place';
+      updateModeButtons();
+      renderPalette();
+      updateSelInfo();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+  document.getElementById('saveRoomBtn').addEventListener('click', ()=>{
+    saveConfig();
+    document.getElementById('selInfo').textContent = 'Saved!';
+    setTimeout(updateSelInfo, 1200);
+  });
+  document.getElementById('resetRoomBtn').addEventListener('click', ()=>{
+    if(confirm('Reset the room back to the default layout? This clears anything you saved.')) resetConfig();
+  });
+  document.getElementById('closeEditorBtn').addEventListener('click', ()=>{
+    editorOpen = false;
+    document.getElementById('editorPanel').classList.remove('open');
+    document.getElementById('editToggleBtn').classList.remove('active');
+  });
+  gameCanvas.addEventListener('pointerdown', onCanvasEdit);
+}
+
 function startGame(){
   gameCanvas = document.getElementById('gameCanvas');
   gctx = gameCanvas.getContext('2d');
+  loadConfig();
   window.addEventListener('keydown', e=>{
     if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
     keysDown[e.key]=true;
@@ -318,6 +562,7 @@ function startGame(){
   bindHold(document.getElementById('dbtn-down'),  ()=>keysDown['ArrowDown']=true,  ()=>keysDown['ArrowDown']=false);
   bindHold(document.getElementById('dbtn-left'),  ()=>keysDown['ArrowLeft']=true,  ()=>keysDown['ArrowLeft']=false);
   bindHold(document.getElementById('dbtn-right'), ()=>keysDown['ArrowRight']=true, ()=>keysDown['ArrowRight']=false);
+  initEditor();
   loop();
 }
 </script>
