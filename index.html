@@ -241,6 +241,9 @@ const TILE_SRC = {
   plant_big: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADsUlEQVR4nM2WMWgbVxjHf6fcybKFbc7IxHAGBYV4cMhgkBbRZovbDi0mLpgOGTS2EEqndunSDtUaCslS2iFDMFTF4CGJtblFi28LFtSNRQoSNFhwJMJ27FP9Opze+Xz3TpYSD/2D0PHed9///973/947rVhcolZbI4ifv/uan578iQrhWIlicYkrN7q8eKYLOTZqGdphy419B0BXDQbIRXD8yo2uBkvKRJK8VD4AoLpl0aw4ImkammqREgnVSpKm4ZNn8ial8gGl8gEvnuliJvcvxrgu5wUgLl/TzpCv/2rRrDhk8ibHjiuSpkGxqBau3IFjxxWZvEnbdmjbDutYpLJQKrf45ZsxAV0yedOPf2k7olQ+oLpl8eZvaNsO4P338ghAU3FFBntKBYAxrmsAbqcrMnmTVNaLaVYc0rm0/85+Y5/ZZdOfS4wktJOjExIjCU6OTmQZNVUZIiUICNPcThe300Ufu6S1bYdmxVvZ7LLJfmPfD07n0jQrp/M9UiHJ9bFLytUrdyC8G6OWwWHLFeG5dC4dEQFgLiQBuFVoAZ4f2rZD0jS0YyfaEbECgm01u2z6CYFIrSWCvgBIZT0h/UQoTRgk95x92lqATx70AUQFYUMVi48/bbGOpTRjRECYXK5WRTQ6lTwz3iuJTzCS0WlWHFHtdRF2dLFKE4bJZTvKX1BIKovfHYA8I6jV1jhqdxnJ6Jo0pwpxXXCGvNeOwR8LU8/92FuFFqms5wG30/UNK0X0Q6wAuUJjXNfcTpdabU15nMryBE0axqhlxO5CrACZWJKHMZebZmHqOW3b8c2pQq22xmHLhZiOixUg2yY2c0+EFFvd8tweJ6KHSD5lG8pA1cEhsdPYYy43zUr+Fas2ZDChEC82Lo8evir73d1BzOWm2WnsAbCSh1UbqlkLiHe8UsBQ0SHcnL8KwD9vXgPQr93eWUD4Pt9p7DEzP+E/wyScc7eo0LcNg+TvX5+A048Q5nLTbNZ32azv+maU89cyIvYDJCJg0Jr/vv1aPPl+/swBdHP+ql8G8A6nL98T/NXWIrdnrIBBA8OQBgw/D4u3MqHchc36bmRsWLz1DlwUzt2BRw/u89vGFq2XXov98NUnkZjHT7f56IPrPH667Y9Zl00ePbjPZ59/8W4CAG4vFsSPDzf48Nt6TITGvT/qBLvw9mIh9kt4aAESK/lXA8Wt2pMD5xxKwExq4twYeSoOiv+/CSXu3lnk3sONASInuXtn8eIFSBEXjUEFDH3JDIr/APXavM83X8v9AAAAAElFTkSuQmCC",
   fr_stair_22: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAW0lEQVR4nGO8enXNfwYKABMlmkcNoJIBLNvuG1FmgJfiOcoMIFVDbe0+Bk1NQfINYGBgYKguliTeAHQb0QFRLkC2MSblPcP969dwG0DIRqJcgM9GDANItREdAAC2oRp+wX2bgQAAAABJRU5ErkJggg==",
   fr_stair_23: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAW0lEQVR4nGO8enXNfwYKAAupGmpr9zFoagqSbwADAwNDdbEk8Qag24gOiHIBso0xKe8Z7l+/htsAQjYS5QJ8NmIYQKqNWF1Aio3ogIlsq5FdQIqNVHfBqAEMDAAADB9MT0u3tQAAAABJRU5ErkJggg=="
+,
+  fr_stair_347: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAmUlEQVR4nGMMCsr6n5RkxaAoeIzh+vnrDMv2aTIsmaPFAAMxKdcYNDUFGZCBpaUmnM0CY1w/f50BF0DWgA5YsAm29j6Hs9Ftx2qAouAxhtp5CFvw2YjVgGXbBBk0ideDaoCmpiBJNmIYcP36e4br14+RbwChQCJogKHiD4oMYKJINzUMYDl/n4MyA7ycBCgyYDCEwbHzFBkAAECFIr3tiuA4AAAAAElFTkSuQmCC",
+  fr_stair_348: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR4nGPcsmXJfwYKABMlmkcNgACWefOOUWaApqYgZQYYKv6gyIBBEIjn73NQZoCXkwBFBgyGMDh2niIDAJzPC5wRhf6dAAAAAElFTkSuQmCC"
 };
 const TILE_IMG = {};
 Object.keys(TILE_SRC).forEach(n=>{ const img = new Image(); img.src = TILE_SRC[n]; TILE_IMG[n] = img; });
@@ -259,10 +262,12 @@ for(let y=0;y<ROOM_H;y++){
 
 const DEFAULT_PROPS = [
   { img:'bed',   x:1, y:1, wT:2, hT:3 },
-  { img:'desk',  x:7, y:2, wT:1, hT:2 },
+  { img:'desk',  x:4, y:1, wT:1, hT:2 },
   { img:'plant', x:7, y:7, wT:1, hT:2 },
   { img:'fr_stair_22', x:7, y:1, wT:1, hT:1, walkable:true },
-  { img:'fr_stair_23', x:8, y:1, wT:1, hT:1, walkable:true }
+  { img:'fr_stair_23', x:8, y:1, wT:1, hT:1, walkable:true },
+  { img:'fr_stair_347', x:7, y:2, wT:1, hT:1, walkable:true },
+  { img:'fr_stair_348', x:8, y:2, wT:1, hT:1, walkable:true }
 ];
 const WALL_DECOR = [
   { img:'painting', x:2, y:0, wT:1, hT:1 },
@@ -443,7 +448,9 @@ const BASE_ASSETS = [
   {key:'rug_red', label:'Red rug', w:3, h:4, walkable:true},
   {key:'rug_green', label:'Green rug', w:2, h:2, walkable:true},
   {key:'fr_stair_22', label:'FR stair A', w:1, h:1, walkable:true},
-  {key:'fr_stair_23', label:'FR stair B', w:1, h:1, walkable:true}
+  {key:'fr_stair_23', label:'FR stair B', w:1, h:1, walkable:true},
+  {key:'fr_stair_347', label:'FR stair C', w:1, h:1, walkable:true},
+  {key:'fr_stair_348', label:'FR stair D', w:1, h:1, walkable:true}
 ];
 
 function renderPalette(){
