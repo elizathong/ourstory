@@ -62,7 +62,7 @@
   #gameScreen{ display:none; flex-direction:column; align-items:center; }
   #roomLabel{ font-size:14px; opacity:.75; margin-bottom:10px; text-align:center; letter-spacing:1px; }
   #gameCanvas{
-    width:min(90vw,360px); height:min(90vw,360px); max-width:360px;
+    width:min(92vw,416px); aspect-ratio:416/320;
     image-rendering:pixelated; border:4px solid rgba(255,255,255,.15); border-radius:12px;
     background:#000; touch-action:none;
   }
@@ -123,7 +123,7 @@
   <button id="confirmBtn">Start</button>
   <div id="gameScreen">
     <div id="roomLabel"></div>
-    <canvas id="gameCanvas" width="320" height="320"></canvas>
+    <canvas id="gameCanvas" width="416" height="320"></canvas>
     <div id="dpad">
       <div class="dbtn" id="dbtn-up">&#9650;</div>
       <div class="dbtn" id="dbtn-left">&#9664;</div>
@@ -249,40 +249,42 @@ const TILE_IMG = {};
 Object.keys(TILE_SRC).forEach(n=>{ const img = new Image(); img.src = TILE_SRC[n]; TILE_IMG[n] = img; });
 
 const NATIVE = 16, SCALE = 2, TILE = NATIVE*SCALE; // 32px on-screen tiles
-const ROOM_W = 10, ROOM_H = 10;
+const ROOM_W = 13, ROOM_H = 10;
+
+// Room background: a pixel-accurate render of FireRed's PalletTown_PlayersHouse_1F map,
+// decoded straight from the game's own tile/palette data.
+const ROOM_BG_SRC = "data:image/png;base64,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";
+const ROOM_BG = new Image();
+ROOM_BG.src = ROOM_BG_SRC;
+
+// Collision baked into that map (1 = blocked), decoded from the same source data.
+const BASE_COLLISION = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0],
+  [1,0,0,0,0,0,1,1,0,0,0,0,0],
+  [1,0,0,0,0,0,1,1,0,0,0,0,0],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0],
+  [1,1,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
 
 const roomGrid = [];
-for(let y=0;y<ROOM_H;y++){
-  const row = [];
-  for(let x=0;x<ROOM_W;x++){
-    row.push((x===0||x===ROOM_W-1||y===0||y===ROOM_H-1) ? 1 : 0);
-  }
-  roomGrid.push(row);
-}
+for(let y=0;y<ROOM_H;y++) roomGrid.push(BASE_COLLISION[y].slice());
 
-const DEFAULT_PROPS = [
-  { img:'bed',   x:1, y:1, wT:2, hT:3 },
-  { img:'desk',  x:4, y:1, wT:1, hT:2 },
-  { img:'plant', x:7, y:7, wT:1, hT:2 },
-  { img:'fr_stair_22', x:7, y:1, wT:1, hT:1, walkable:true },
-  { img:'fr_stair_23', x:8, y:1, wT:1, hT:1, walkable:true },
-  { img:'fr_stair_347', x:7, y:2, wT:1, hT:1, walkable:true },
-  { img:'fr_stair_348', x:8, y:2, wT:1, hT:1, walkable:true }
-];
-const WALL_DECOR = [
-  { img:'painting', x:2, y:0, wT:1, hT:1 },
-  { img:'window',   x:5, y:0, wT:1, hT:2 }
-];
+const DEFAULT_PROPS = [];
+const WALL_DECOR = [];
 let PROPS = [];
 let manualWalls = []; // [[x,y], ...] extra collision tiles set via the editor
 
 function rebuildGrid(){
   for(let y=0;y<ROOM_H;y++){
     for(let x=0;x<ROOM_W;x++){
-      roomGrid[y][x] = (x===0||x===ROOM_W-1||y===0||y===ROOM_H-1) ? 1 : 0;
+      roomGrid[y][x] = BASE_COLLISION[y][x];
     }
   }
-  roomGrid[1][5] = 1; // keep the floor under the window clear of furniture, but not walkable
   PROPS.forEach(p=>{
     if(p.walkable) return;
     for(let yy=p.y; yy<p.y+p.hT; yy++) for(let xx=p.x; xx<p.x+p.wT; xx++){
@@ -326,7 +328,7 @@ function resetConfig(){
 }
 
 const DIRS = ['down','up','left','right'];
-let player = { x:5, y:6, px:5*TILE, py:6*TILE, targetPx:5*TILE, targetPy:6*TILE, facing:'down', moving:false };
+let player = { x:5, y:8, px:5*TILE, py:8*TILE, targetPx:5*TILE, targetPy:8*TILE, facing:'up', moving:false };
 let keysDown = {};
 let gameCanvas, gctx;
 
@@ -378,17 +380,7 @@ function drawPlayer(ctx){
 
 function draw(){
   gctx.imageSmoothingEnabled = false;
-  for(let y=0;y<ROOM_H;y++){
-    for(let x=0;x<ROOM_W;x++){
-      const isWall = roomGrid[y][x]===1 && y===0 || (x===0||x===ROOM_W-1||y===0||y===ROOM_H-1);
-      const img = (x===0||x===ROOM_W-1||y===0||y===ROOM_H-1) ? TILE_IMG.wall : TILE_IMG.floor;
-      gctx.drawImage(img, 0,0,NATIVE,NATIVE, x*TILE,y*TILE,TILE,TILE);
-    }
-  }
-  WALL_DECOR.forEach(d=>{
-    const img = TILE_IMG[d.img];
-    gctx.drawImage(img, 0,0,d.wT*NATIVE,d.hT*NATIVE, d.x*TILE, d.y*TILE, d.wT*TILE, d.hT*TILE);
-  });
+  gctx.drawImage(ROOM_BG, 0,0,ROOM_W*NATIVE,ROOM_H*NATIVE, 0,0,ROOM_W*TILE,ROOM_H*TILE);
   PROPS.filter(p=>p.walkable).forEach(d=>{
     const img = TILE_IMG[d.img];
     gctx.drawImage(img, 0,0,d.wT*NATIVE,d.hT*NATIVE, d.x*TILE, d.y*TILE, d.wT*TILE, d.hT*TILE);
