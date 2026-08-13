@@ -330,6 +330,8 @@ function enterMap(id, spawnX, spawnY, spawnFacing){
 }
 
 const DIRS = ['down','up','left','right'];
+// sprite sheet column order is right,up,left,down (not the same as DIRS above)
+const DIR_COL = {right:0, up:1, left:2, down:3};
 let player = { x:3, y:8, px:3*TILE, py:8*TILE, targetPx:3*TILE, targetPy:8*TILE, facing:'up', moving:false };
 let keysDown = {};
 let gameCanvas, gctx;
@@ -381,7 +383,7 @@ function handleInput(){
 }
 
 function drawPlayer(ctx){
-  const dirIdx = DIRS.indexOf(player.facing);
+  const dirIdx = DIR_COL[player.facing];
   const dw = NATIVE*SCALE, dh = 32*SCALE;
   const dx = player.px, dy = player.py - (dh - TILE); // anchor feet to tile
   ctx.imageSmoothingEnabled = false;
