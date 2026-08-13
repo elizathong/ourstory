@@ -79,36 +79,12 @@
   #dbtn-left{ top:44px; left:0; }
   #dbtn-right{ top:44px; left:88px; }
 
-  /* ---------- Room editor ---------- */
   #toolRow{ display:flex; gap:10px; margin-top:14px; }
   .toolBtn{
     font-size:12px; background:rgba(255,255,255,.1); color:var(--cream);
     border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:7px 12px; cursor:pointer;
   }
   .toolBtn.active{ background:var(--coral); color:#2a1030; border-color:var(--coral); }
-  #editorPanel{
-    display:none; flex-direction:column; align-items:center; gap:10px;
-    width:min(92vw,380px); margin-top:14px; background:rgba(0,0,0,.25);
-    border-radius:12px; padding:12px;
-  }
-  #editorPanel.open{ display:flex; }
-  .editorTabs{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-  .paletteItem{
-    width:44px; height:44px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.2);
-    border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden;
-  }
-  .paletteItem.active{ border-color:var(--coral); background:rgba(255,111,145,.2); }
-  .paletteItem img{ max-width:36px; max-height:36px; image-rendering:pixelated; }
-  .paletteItem span{ font-size:9px; opacity:.7; }
-  #sheetScroll{
-    width:100%; max-height:260px; overflow:auto; background:rgba(0,0,0,.3);
-    border-radius:8px; touch-action:pan-y pan-x;
-  }
-  #sheetCanvas{ display:block; image-rendering:pixelated; cursor:crosshair; }
-  #selInfo{ font-size:12px; opacity:.8; }
-  .editorModeRow{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-  .editorActions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-  #editorHelp{ font-size:11px; opacity:.6; text-align:center; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -131,26 +107,7 @@
       <div class="dbtn" id="dbtn-down">&#9660;</div>
     </div>
     <div id="toolRow">
-      <button class="toolBtn" id="editToggleBtn">Edit Room</button>
       <button class="toolBtn" id="collisionToggleBtn">Show Collision</button>
-    </div>
-    <div id="editorPanel">
-      <div class="editorTabs" id="paletteRow"></div>
-      <input type="file" id="uploadInput" accept="image/*" style="display:none">
-      <button class="toolBtn" id="uploadBtn">+ Upload furniture</button>
-      <div class="editorModeRow">
-        <button class="toolBtn" data-mode="place">Place</button>
-        <button class="toolBtn" data-mode="erase">Erase</button>
-        <button class="toolBtn" data-mode="wall">Mark Wall</button>
-        <button class="toolBtn" data-mode="floor">Mark Floor</button>
-      </div>
-      <div id="selInfo">Pick an item, then tap the room to place it.</div>
-      <div class="editorActions">
-        <button class="toolBtn" id="saveRoomBtn">Save</button>
-        <button class="toolBtn" id="resetRoomBtn">Reset to default</button>
-        <button class="toolBtn" id="closeEditorBtn">Close</button>
-      </div>
-      <div id="editorHelp">Place: pick furniture below, tap the room to drop it.<br>Erase: tap a placed item to remove it.<br>Wall / Floor: tap empty floor tiles to block or unblock them (for walls without art).<br>Don't forget Save, or your layout resets on reload.</div>
     </div>
   </div>
 </div>
@@ -323,50 +280,12 @@ function isBlocked(cx,cy){
   return roomGrid[cy][cx] === 1;
 }
 
-const STORAGE_KEY = 'ourstory_room_v2';
-let customAssets = {}; // name -> data URL, for player-uploaded furniture
-
-function readSavedData(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
-}
-
-function loadCustomAssets(){
-  const saved = readSavedData();
-  if(saved.customAssets){
-    customAssets = saved.customAssets;
-    Object.keys(customAssets).forEach(name=>{
-      const img = new Image(); img.src = customAssets[name]; TILE_IMG[name] = img;
-    });
-  }
-}
-
-function loadMapData(id){
-  const map = MAPS[id];
-  const saved = readSavedData();
-  const mapSaved = saved.maps && saved.maps[id];
-  map.props = mapSaved ? mapSaved.props : map.defaultProps.map(p=>({...p}));
-  map.manualWalls = mapSaved ? mapSaved.manualWalls : [];
-  rebuildGrid();
-}
-
-function saveConfig(){
-  const saved = readSavedData();
-  saved.maps = saved.maps || {};
-  saved.maps[currentMapId] = { props: MAPS[currentMapId].props, manualWalls: MAPS[currentMapId].manualWalls };
-  saved.customAssets = customAssets;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-}
-
-function resetConfig(){
-  const saved = readSavedData();
-  if(saved.maps) delete saved.maps[currentMapId];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-  location.reload();
-}
-
 function enterMap(id, spawnX, spawnY, spawnFacing){
   currentMapId = id;
-  loadMapData(id);
+  const map = MAPS[id];
+  map.props = map.defaultProps.map(p=>({...p}));
+  map.manualWalls = [];
+  rebuildGrid();
   player.x = spawnX; player.y = spawnY;
   player.px = spawnX*TILE; player.py = spawnY*TILE;
   player.targetPx = player.px; player.targetPy = player.py;
@@ -469,12 +388,6 @@ function draw(){
       if(roomGrid[y][x]===1) gctx.fillRect(x*TILE, y*TILE, TILE, TILE);
     }
   }
-  if(editorOpen){
-    gctx.strokeStyle = 'rgba(255,255,255,.18)';
-    gctx.lineWidth = 1;
-    for(let x=0;x<=map.w;x++){ gctx.beginPath(); gctx.moveTo(x*TILE,0); gctx.lineTo(x*TILE,map.h*TILE); gctx.stroke(); }
-    for(let y=0;y<=map.h;y++){ gctx.beginPath(); gctx.moveTo(0,y*TILE); gctx.lineTo(map.w*TILE,y*TILE); gctx.stroke(); }
-  }
   gctx.restore();
 }
 
@@ -493,164 +406,17 @@ function bindHold(el, onDown, onUp){
 }
 
 let debugCollision = false;
-let editorOpen = false;
-let editorMode = 'place';
-let selectedAsset = null; // {key, w, h}
-const BASE_ASSETS = [
-  {key:'bed', label:'Bed', w:2, h:3},
-  {key:'desk', label:'Desk', w:1, h:2},
-  {key:'couch', label:'Couch', w:2, h:4},
-  {key:'plant', label:'Plant', w:1, h:2},
-  {key:'plant_big', label:'Big plant', w:2, h:2},
-  {key:'window', label:'Window', w:1, h:2},
-  {key:'painting', label:'Painting', w:1, h:1},
-  {key:'wardrobe', label:'Wardrobe', w:2, h:3},
-  {key:'dresser', label:'Dresser', w:3, h:2},
-  {key:'lamp', label:'Lamp', w:1, h:2},
-  {key:'rug_gold', label:'Gold rug', w:3, h:4, walkable:true},
-  {key:'rug_red', label:'Red rug', w:3, h:4, walkable:true},
-  {key:'rug_green', label:'Green rug', w:2, h:2, walkable:true},
-  {key:'fr_stair_22', label:'FR stair A', w:1, h:1, walkable:true},
-  {key:'fr_stair_23', label:'FR stair B', w:1, h:1, walkable:true},
-  {key:'fr_stair_347', label:'FR stair C', w:1, h:1, walkable:true},
-  {key:'fr_stair_348', label:'FR stair D', w:1, h:1, walkable:true}
-];
-
-function renderPalette(){
-  const row = document.getElementById('paletteRow');
-  row.innerHTML = '';
-  const items = BASE_ASSETS.concat(Object.keys(customAssets).map(key=>({key, label:'Yours', w:2, h:2})));
-  items.forEach(item=>{
-    const el = document.createElement('div');
-    el.className = 'paletteItem' + (selectedAsset && selectedAsset.key===item.key ? ' active' : '');
-    const img = document.createElement('img');
-    img.src = TILE_SRC[item.key] || customAssets[item.key];
-    el.appendChild(img);
-    el.title = item.label;
-    el.addEventListener('click', ()=>{
-      selectedAsset = { key:item.key, w:item.w, h:item.h };
-      editorMode = 'place';
-      updateModeButtons();
-      renderPalette();
-      updateSelInfo();
-    });
-    row.appendChild(el);
-  });
-}
-
-function updateModeButtons(){
-  document.querySelectorAll('.editorModeRow .toolBtn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.mode===editorMode);
-  });
-}
-
-function updateSelInfo(){
-  const info = document.getElementById('selInfo');
-  if(editorMode==='place') info.textContent = selectedAsset ? `Placing: ${selectedAsset.key}. Tap the room.` : 'Pick an item above first.';
-  else if(editorMode==='erase') info.textContent = 'Tap a placed item to remove it.';
-  else if(editorMode==='wall') info.textContent = 'Tap a floor tile to block it.';
-  else if(editorMode==='floor') info.textContent = 'Tap a marked tile to unblock it.';
-}
-
-function tileFromEvent(e){
-  const rect = gameCanvas.getBoundingClientRect();
-  const scaleX = gameCanvas.width / rect.width;
-  const scaleY = gameCanvas.height / rect.height;
-  const px = (e.clientX - rect.left) * scaleX;
-  const py = (e.clientY - rect.top) * scaleY;
-  const {camX,camY} = computeCamera();
-  return { x: Math.floor((px+camX)/TILE), y: Math.floor((py+camY)/TILE) };
-}
-
-function onCanvasEdit(e){
-  if(!editorOpen) return;
-  const map = MAPS[currentMapId];
-  const {x,y} = tileFromEvent(e);
-  if(x<0||y<0||x>=map.w||y>=map.h) return;
-  if(editorMode==='place'){
-    if(!selectedAsset) return;
-    const w = selectedAsset.w, h = selectedAsset.h;
-    const prop = { img:selectedAsset.key, x: Math.min(x, map.w-1-w), y: Math.min(y, map.h-1-h), wT:w, hT:h };
-    if(selectedAsset.walkable) prop.walkable = true;
-    map.props.push(prop);
-  } else if(editorMode==='erase'){
-    for(let i=map.props.length-1;i>=0;i--){
-      const p = map.props[i];
-      if(x>=p.x && x<p.x+p.wT && y>=p.y && y<p.y+p.hT){ map.props.splice(i,1); break; }
-    }
-  } else if(editorMode==='wall'){
-    if(!map.manualWalls.some(([mx,my])=>mx===x&&my===y)) map.manualWalls.push([x,y]);
-  } else if(editorMode==='floor'){
-    map.manualWalls = map.manualWalls.filter(([mx,my])=>!(mx===x&&my===y));
-  }
-  rebuildGrid();
-}
 
 function initEditor(){
-  renderPalette();
-  updateModeButtons();
-  updateSelInfo();
-
-  document.getElementById('editToggleBtn').addEventListener('click', ()=>{
-    editorOpen = !editorOpen;
-    document.getElementById('editorPanel').classList.toggle('open', editorOpen);
-    document.getElementById('editToggleBtn').classList.toggle('active', editorOpen);
-  });
   document.getElementById('collisionToggleBtn').addEventListener('click', ()=>{
     debugCollision = !debugCollision;
     document.getElementById('collisionToggleBtn').classList.toggle('active', debugCollision);
   });
-  document.querySelectorAll('.editorModeRow .toolBtn').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      editorMode = b.dataset.mode;
-      if(editorMode!=='place') selectedAsset = null;
-      updateModeButtons();
-      renderPalette();
-      updateSelInfo();
-    });
-  });
-  document.getElementById('uploadBtn').addEventListener('click', ()=>document.getElementById('uploadInput').click());
-  document.getElementById('uploadInput').addEventListener('change', e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      let w = parseInt(prompt('How many tiles wide (1-4)?','2'),10);
-      let h = parseInt(prompt('How many tiles tall (1-4)?','2'),10);
-      if(!w || w<1) w=1; if(w>4) w=4;
-      if(!h || h<1) h=1; if(h>4) h=4;
-      const key = 'custom_' + Date.now();
-      customAssets[key] = reader.result;
-      const img = new Image(); img.src = reader.result; TILE_IMG[key] = img;
-      selectedAsset = { key, w, h };
-      editorMode = 'place';
-      updateModeButtons();
-      renderPalette();
-      updateSelInfo();
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  });
-  document.getElementById('saveRoomBtn').addEventListener('click', ()=>{
-    saveConfig();
-    document.getElementById('selInfo').textContent = 'Saved!';
-    setTimeout(updateSelInfo, 1200);
-  });
-  document.getElementById('resetRoomBtn').addEventListener('click', ()=>{
-    if(confirm('Reset the room back to the default layout? This clears anything you saved.')) resetConfig();
-  });
-  document.getElementById('closeEditorBtn').addEventListener('click', ()=>{
-    editorOpen = false;
-    document.getElementById('editorPanel').classList.remove('open');
-    document.getElementById('editToggleBtn').classList.remove('active');
-  });
-  gameCanvas.addEventListener('pointerdown', onCanvasEdit);
 }
 
 function startGame(){
   gameCanvas = document.getElementById('gameCanvas');
   gctx = gameCanvas.getContext('2d');
-  loadCustomAssets();
   const spawn = MAPS.room.spawn;
   enterMap('room', spawn.x, spawn.y, spawn.facing);
   window.addEventListener('keydown', e=>{
