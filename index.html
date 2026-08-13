@@ -66,7 +66,11 @@
     image-rendering:pixelated; border:4px solid rgba(255,255,255,.15); border-radius:12px;
     background:#000; touch-action:none;
   }
-  #dpad{ position:relative; width:132px; height:132px; margin-top:22px; }
+  #controlRow{
+    display:flex; align-items:center; justify-content:space-between;
+    width:min(352px, calc(100vw - 8px)); margin-top:26px;
+  }
+  #dpad{ position:relative; width:132px; height:132px; }
   .dbtn{
     position:absolute; width:44px; height:44px; background:rgba(255,255,255,.1);
     border:2px solid rgba(255,255,255,.25); border-radius:10px; color:var(--cream);
@@ -78,6 +82,16 @@
   #dbtn-down{ top:88px; left:44px; }
   #dbtn-left{ top:44px; left:0; }
   #dbtn-right{ top:44px; left:88px; }
+  #actionPad{ position:relative; width:112px; height:84px; }
+  .abtn{
+    position:absolute; width:48px; height:48px; border-radius:50%;
+    background:rgba(255,255,255,.1); border:2px solid rgba(255,255,255,.25); color:var(--cream);
+    display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700;
+    touch-action:none; -webkit-tap-highlight-color:transparent; cursor:pointer;
+  }
+  .abtn:active, .abtn.pressed{ background:var(--coral); border-color:var(--coral); color:#2a1030; }
+  #abtn-a{ top:0; right:0; }
+  #abtn-b{ top:32px; right:54px; }
 
   #toolRow{ display:flex; gap:10px; margin-top:14px; }
   .toolBtn{
@@ -100,11 +114,17 @@
   <div id="gameScreen">
     <div id="roomLabel"></div>
     <canvas id="gameCanvas" width="352" height="320"></canvas>
-    <div id="dpad">
-      <div class="dbtn" id="dbtn-up">&#9650;</div>
-      <div class="dbtn" id="dbtn-left">&#9664;</div>
-      <div class="dbtn" id="dbtn-right">&#9654;</div>
-      <div class="dbtn" id="dbtn-down">&#9660;</div>
+    <div id="controlRow">
+      <div id="dpad">
+        <div class="dbtn" id="dbtn-up">&#9650;</div>
+        <div class="dbtn" id="dbtn-left">&#9664;</div>
+        <div class="dbtn" id="dbtn-right">&#9654;</div>
+        <div class="dbtn" id="dbtn-down">&#9660;</div>
+      </div>
+      <div id="actionPad">
+        <div class="abtn" id="abtn-b">B</div>
+        <div class="abtn" id="abtn-a">A</div>
+      </div>
     </div>
     <div id="toolRow">
       <button class="toolBtn" id="collisionToggleBtn">Show Collision</button>
@@ -428,6 +448,9 @@ function startGame(){
   bindHold(document.getElementById('dbtn-down'),  ()=>keysDown['ArrowDown']=true,  ()=>keysDown['ArrowDown']=false);
   bindHold(document.getElementById('dbtn-left'),  ()=>keysDown['ArrowLeft']=true,  ()=>keysDown['ArrowLeft']=false);
   bindHold(document.getElementById('dbtn-right'), ()=>keysDown['ArrowRight']=true, ()=>keysDown['ArrowRight']=false);
+  // A/B are visual only for now - not wired to anything yet
+  bindHold(document.getElementById('abtn-a'), ()=>{}, ()=>{});
+  bindHold(document.getElementById('abtn-b'), ()=>{}, ()=>{});
   initEditor();
   loop();
 }
