@@ -615,12 +615,13 @@ const MINIGAME_RESULT_GRACE = 1200; // ms before a tap on the results screen can
 const TREADMILL_DURATION = 15000;
 const BOXING_DURATION = 10000;
 const BOXING_PROMPT_WINDOW = 800; // ms to react to each prompt
+const PUNCH_ANIM_DURATION = 220; // ms for a fist to travel out and back
 
 function startMinigame(kind){
   if(kind==='treadmill'){
     minigame = { kind, speed:0, distance:0, timeLeft:TREADMILL_DURATION, beltOffset:0, phase:'intro', doneAt:0 };
   } else if(kind==='boxing'){
-    minigame = { kind, score:0, timeLeft:BOXING_DURATION, phase:'intro', doneAt:0, prompt:null, promptDeadline:0, feedback:null, feedbackUntil:0 };
+    minigame = { kind, score:0, timeLeft:BOXING_DURATION, phase:'intro', doneAt:0, prompt:null, promptDeadline:0, feedback:null, feedbackUntil:0, lastPunchSide:null, lastPunchAt:0 };
   }
   minigameActive = true;
 }
@@ -631,6 +632,8 @@ function spawnBoxingPrompt(){
 }
 
 function boxingPunch(side){
+  minigame.lastPunchSide = side;
+  minigame.lastPunchAt = Date.now();
   if(minigame.prompt === side){
     minigame.score += 1;
     minigame.feedback = 'HIT!';
@@ -751,6 +754,50 @@ function drawTreadmillScene(ctx,W,H){
   }
 }
 
+function drawGlove(ctx, x, y, r, color){
+  ctx.strokeStyle = '#1c1c22';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x, y + r*1.6);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1c1c22';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x-r*0.5, y+r*0.15);
+  ctx.lineTo(x+r*0.5, y+r*0.15);
+  ctx.stroke();
+}
+
+function drawBoxerGloves(ctx, cx, bagTopY, W, H){
+  const now = Date.now();
+  const punchAmt = (side) => {
+    if(minigame.lastPunchSide !== side) return 0;
+    const t = (now - minigame.lastPunchAt) / PUNCH_ANIM_DURATION;
+    if(t < 0 || t > 1) return 0;
+    return Math.sin(t * Math.PI);
+  };
+
+  const targetY = bagTopY + 80;
+  const rHome = { x: W - 26, y: H - 14 };
+  const rTarget = { x: cx + 16, y: targetY };
+  const rp = punchAmt('A');
+  drawGlove(ctx, rHome.x + (rTarget.x-rHome.x)*rp, rHome.y + (rTarget.y-rHome.y)*rp, 15, '#3ad6e0');
+
+  const lHome = { x: 26, y: H - 14 };
+  const lTarget = { x: cx - 16, y: targetY };
+  const lp = punchAmt('B');
+  drawGlove(ctx, lHome.x + (lTarget.x-lHome.x)*lp, lHome.y + (lTarget.y-lHome.y)*lp, 15, '#f0c93a');
+}
+
 function drawBoxingScene(ctx,W,H){
   const cx = W/2, bagTopY = 60;
   const sway = minigame.phase==='running' ? Math.sin(Date.now()/220)*4 : 0;
@@ -814,6 +861,8 @@ function drawBoxingScene(ctx,W,H){
       ctx.fillText(minigame.feedback, cx, bagTopY-20);
     }
   }
+
+  drawBoxerGloves(ctx, cx, bagTopY, W, H);
 }
 
 function drawMinigameIntro(ctx,W,H){
