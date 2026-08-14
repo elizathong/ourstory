@@ -389,6 +389,7 @@ const MAPS = {
     bgFrames: GYM_BG_FRAME_SRCS.map(src=>{ const im = new Image(); im.src = src; return im; }),
     bgFrameDuration: 100,
     playerScale: 1.5,
+    zoom: 0.8,
     baseCollision: [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -510,8 +511,9 @@ function tryMove(dir){
 
 function computeCamera(){
   const map = MAPS[currentMapId];
+  const zoom = map.zoom || 1;
   const mapWpx = map.w*TILE, mapHpx = map.h*TILE;
-  const viewWpx = VIEW_W*TILE, viewHpx = VIEW_H*TILE;
+  const viewWpx = VIEW_W*TILE/zoom, viewHpx = VIEW_H*TILE/zoom;
   let camX, camY;
   if(mapWpx <= viewWpx) camX = (mapWpx-viewWpx)/2;
   else camX = Math.max(0, Math.min(player.px+TILE/2-viewWpx/2, mapWpx-viewWpx));
@@ -566,8 +568,10 @@ function draw(){
   gctx.fillStyle = '#000';
   gctx.fillRect(0,0,gameCanvas.width,gameCanvas.height);
   const map = MAPS[currentMapId];
+  const zoom = map.zoom || 1;
   const {camX,camY} = computeCamera();
   gctx.save();
+  gctx.scale(zoom, zoom);
   gctx.translate(-camX,-camY);
   const bg = map.bgFrames ? map.bgFrames[Math.floor(Date.now()/map.bgFrameDuration)%map.bgFrames.length] : map.bg;
   gctx.drawImage(bg, 0,0,map.w*NATIVE,map.h*NATIVE, 0,0,map.w*TILE,map.h*TILE);
