@@ -785,17 +785,28 @@ function drawBoxerGloves(ctx, cx, bagTopY, W, H){
     if(t < 0 || t > 1) return 0;
     return Math.sin(t * Math.PI);
   };
+  const rp = punchAmt('A'), lp = punchAmt('B');
+  const lean = Math.max(rp, lp) * 6;
 
+  const pscale = 1.3;
+  const pdw = NATIVE*SCALE*pscale, pdh = 32*SCALE*pscale;
+  const px = cx - pdw/2;
+  const py = 145 - lean;
+  const dirIdx = DIR_COL['up'];
+  if(PLAYER_IDLE && PLAYER_IDLE.complete){
+    const sx = dirIdx*NATIVE;
+    ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, px,py,pdw,pdh);
+  }
+
+  const chestY = py + pdh*0.4;
   const targetY = bagTopY + 80;
-  const rHome = { x: W - 26, y: H - 14 };
+  const rHome = { x: px + pdw + 4, y: chestY };
   const rTarget = { x: cx + 16, y: targetY };
-  const rp = punchAmt('A');
-  drawGlove(ctx, rHome.x + (rTarget.x-rHome.x)*rp, rHome.y + (rTarget.y-rHome.y)*rp, 15, '#3ad6e0');
+  drawGlove(ctx, rHome.x + (rTarget.x-rHome.x)*rp, rHome.y + (rTarget.y-rHome.y)*rp, 14, '#3ad6e0');
 
-  const lHome = { x: 26, y: H - 14 };
+  const lHome = { x: px - 4, y: chestY };
   const lTarget = { x: cx - 16, y: targetY };
-  const lp = punchAmt('B');
-  drawGlove(ctx, lHome.x + (lTarget.x-lHome.x)*lp, lHome.y + (lTarget.y-lHome.y)*lp, 15, '#f0c93a');
+  drawGlove(ctx, lHome.x + (lTarget.x-lHome.x)*lp, lHome.y + (lTarget.y-lHome.y)*lp, 14, '#f0c93a');
 }
 
 function drawBoxingScene(ctx,W,H){
