@@ -432,15 +432,27 @@ function closeGifCutscene(){
   });
 }
 
+let pendingDoorAction = null;
+
 function tryMove(dir){
   if(player.moving || transition) return;
   if(cutsceneActive){ closeGifCutscene(); return; }
   player.facing = dir;
   const map = MAPS[currentMapId];
   const gifDoor = (map.gifDoors||[]).find(g=>g.x===player.x && g.y===player.y && g.dir===dir);
-  if(gifDoor){ startTransition(showGifCutscene); return; }
   const warp = (map.warps||[]).find(w=>w.x===player.x && w.y===player.y && w.dir===dir);
-  if(warp){ startTransition(()=> enterMap(warp.to, warp.spawnX, warp.spawnY, warp.spawnFacing)); return; }
+  if(gifDoor || warp){
+    let dx=0, dy=0;
+    if(dir==='up') dy=-1; else if(dir==='down') dy=1;
+    else if(dir==='left') dx=-1; else if(dir==='right') dx=1;
+    const nx = Math.max(0, Math.min(map.w-1, player.x+dx));
+    const ny = Math.max(0, Math.min(map.h-1, player.y+dy));
+    pendingDoorAction = gifDoor ? showGifCutscene : (()=> enterMap(warp.to, warp.spawnX, warp.spawnY, warp.spawnFacing));
+    player.x = nx; player.y = ny;
+    player.targetPx = nx*TILE; player.targetPy = ny*TILE;
+    player.moving = true;
+    return;
+  }
   let dx=0, dy=0;
   if(dir==='up') dy=-1; else if(dir==='down') dy=1;
   else if(dir==='left') dx=-1; else if(dir==='right') dx=1;
@@ -470,7 +482,14 @@ function updatePlayer(){
     if(player.px>player.targetPx) player.px=Math.max(player.px-speed, player.targetPx);
     if(player.py<player.targetPy) player.py=Math.min(player.py+speed, player.targetPy);
     if(player.py>player.targetPy) player.py=Math.max(player.py-speed, player.targetPy);
-    if(player.px===player.targetPx && player.py===player.targetPy) player.moving=false;
+    if(player.px===player.targetPx && player.py===player.targetPy){
+      player.moving=false;
+      if(pendingDoorAction){
+        const action = pendingDoorAction;
+        pendingDoorAction = null;
+        startTransition(action);
+      }
+    }
   }
 }
 
