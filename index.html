@@ -399,7 +399,7 @@ const MAPS = {
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1],
       [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1],
@@ -429,7 +429,9 @@ const MAPS = {
     ],
     minigameTiles: [
       {x:11,y:20,game:'treadmill'},
-      {x:12,y:20,game:'treadmill'}
+      {x:12,y:20,game:'treadmill'},
+      {x:30,y:5,game:'boxing'},
+      {x:31,y:5,game:'boxing'}
     ]
   }
 };
@@ -606,36 +608,73 @@ function draw(){
   gctx.restore();
 }
 
-// ---------- Treadmill minigame ----------
+// ---------- Gym minigames ----------
 let minigameActive = false;
 let minigame = null;
-const MINIGAME_DURATION = 15000;
-
 const MINIGAME_RESULT_GRACE = 1200; // ms before a tap on the results screen can exit
+const TREADMILL_DURATION = 15000;
+const BOXING_DURATION = 10000;
+const BOXING_PROMPT_WINDOW = 800; // ms to react to each prompt
 
 function startMinigame(kind){
-  minigame = { kind, speed:0, distance:0, timeLeft:MINIGAME_DURATION, beltOffset:0, phase:'intro', doneAt:0 };
+  if(kind==='treadmill'){
+    minigame = { kind, speed:0, distance:0, timeLeft:TREADMILL_DURATION, beltOffset:0, phase:'intro', doneAt:0 };
+  } else if(kind==='boxing'){
+    minigame = { kind, score:0, timeLeft:BOXING_DURATION, phase:'intro', doneAt:0, prompt:null, promptDeadline:0, feedback:null, feedbackUntil:0 };
+  }
   minigameActive = true;
 }
 
-function tapMinigame(){
+function spawnBoxingPrompt(){
+  minigame.prompt = Math.random() < 0.5 ? 'A' : 'B';
+  minigame.promptDeadline = Date.now() + BOXING_PROMPT_WINDOW;
+}
+
+function boxingPunch(side){
+  if(minigame.prompt === side){
+    minigame.score += 1;
+    minigame.feedback = 'HIT!';
+    spawnBoxingPrompt();
+  } else {
+    minigame.feedback = 'MISS';
+  }
+  minigame.feedbackUntil = Date.now() + 150;
+}
+
+function pressA(){
   if(!minigame) return;
   if(minigame.phase==='intro'){
     minigame.phase = 'running';
+    if(minigame.kind==='boxing') spawnBoxingPrompt();
   } else if(minigame.phase==='running'){
-    minigame.speed = Math.min(10, minigame.speed + 1.3);
+    if(minigame.kind==='treadmill') minigame.speed = Math.min(10, minigame.speed + 1.3);
+    else if(minigame.kind==='boxing') boxingPunch('A');
   } else if(minigame.phase==='done'){
     if(Date.now() - minigame.doneAt < MINIGAME_RESULT_GRACE) return;
     startTransition(()=>{ minigameActive = false; minigame = null; });
   }
 }
 
+function pressB(){
+  if(!minigame) return;
+  if(minigame.phase==='intro'){
+    startTransition(()=>{ minigameActive = false; minigame = null; });
+  } else if(minigame.phase==='running'){
+    if(minigame.kind==='treadmill') startTransition(()=>{ minigameActive = false; minigame = null; });
+    else if(minigame.kind==='boxing') boxingPunch('B');
+  }
+}
+
 function updateMinigame(){
   if(!minigame || minigame.phase!=='running') return;
-  minigame.speed = Math.max(0, minigame.speed - 0.045);
-  minigame.distance += minigame.speed * 0.14;
-  minigame.beltOffset = (minigame.beltOffset + minigame.speed*1.5) % 32;
   minigame.timeLeft -= 16.7;
+  if(minigame.kind==='treadmill'){
+    minigame.speed = Math.max(0, minigame.speed - 0.045);
+    minigame.distance += minigame.speed * 0.14;
+    minigame.beltOffset = (minigame.beltOffset + minigame.speed*1.5) % 32;
+  } else if(minigame.kind==='boxing'){
+    if(Date.now() > minigame.promptDeadline) spawnBoxingPrompt();
+  }
   if(minigame.timeLeft <= 0){
     minigame.timeLeft = 0;
     minigame.phase = 'done';
@@ -650,6 +689,14 @@ function drawMinigame(){
   ctx.fillStyle = '#3a3a44';
   ctx.fillRect(0,0,W,H);
 
+  if(minigame.kind==='treadmill') drawTreadmillScene(ctx,W,H);
+  else if(minigame.kind==='boxing') drawBoxingScene(ctx,W,H);
+
+  if(minigame.phase==='intro') drawMinigameIntro(ctx,W,H);
+  else if(minigame.phase==='done') drawMinigameDone(ctx,W,H);
+}
+
+function drawTreadmillScene(ctx,W,H){
   const deckX = 96, deckW = 160, deckY = 70, deckH = 190;
   ctx.fillStyle = '#26262e';
   ctx.fillRect(deckX-10, deckY-10, deckW+20, deckH+20);
@@ -692,16 +739,90 @@ function drawMinigame(){
   const barW = 200, barX = W/2-barW/2, barY = deckY+deckH+20;
   ctx.strokeStyle = '#fff'; ctx.strokeRect(barX, barY, barW, 10);
   ctx.fillStyle = '#e05a5a';
-  ctx.fillRect(barX, barY, barW*(minigame.timeLeft/MINIGAME_DURATION), 10);
+  ctx.fillRect(barX, barY, barW*(minigame.timeLeft/TREADMILL_DURATION), 10);
 
   ctx.fillStyle = '#9be564';
   ctx.fillRect(barX, barY+18, barW*(minigame.speed/10), 6);
 
-  if(minigame.phase==='intro'){
-    ctx.fillStyle = 'rgba(20,20,26,0.85)';
-    ctx.fillRect(0,0,W,H);
+  if(minigame.phase==='running'){
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '12px monospace';
+    ctx.fillText('TAP A TO RUN!', W/2, barY+42);
+  }
+}
+
+function drawBoxingScene(ctx,W,H){
+  const cx = W/2, bagTopY = 60;
+  const sway = minigame.phase==='running' ? Math.sin(Date.now()/220)*4 : 0;
+
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx, 20);
+  ctx.lineTo(cx+sway*0.3, bagTopY);
+  ctx.stroke();
+
+  ctx.fillStyle = '#3a2a2a';
+  ctx.beginPath();
+  ctx.ellipse(cx+sway, bagTopY+80, 46, 90, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#c0463c';
+  ctx.beginPath();
+  ctx.ellipse(cx+sway, bagTopY+80, 34, 76, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 2;
+  for(let i=-2;i<=2;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx+sway-30, bagTopY+30+i*24);
+    ctx.lineTo(cx+sway+30, bagTopY+30+i*24);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 16px monospace';
+  ctx.fillText('BOXING', W/2, 30);
+
+  const barW = 200, barX = W/2-barW/2, barY = 250;
+  ctx.font = '14px monospace';
+  ctx.fillText('SCORE: ' + minigame.score, W/2, barY-10);
+  ctx.strokeStyle = '#fff'; ctx.strokeRect(barX, barY, barW, 10);
+  ctx.fillStyle = '#e05a5a';
+  ctx.fillRect(barX, barY, barW*(minigame.timeLeft/BOXING_DURATION), 10);
+
+  if(minigame.phase==='running' && minigame.prompt){
+    const pct = Math.max(0, (minigame.promptDeadline - Date.now())/BOXING_PROMPT_WINDOW);
+    const isA = minigame.prompt==='A';
+    ctx.fillStyle = isA ? '#3ad6e0' : '#f0c93a';
+    ctx.strokeStyle = '#1c1c22';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, bagTopY+80, 30+pct*10, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#1c1c22';
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText(minigame.prompt, cx, bagTopY+90);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText(isA ? 'RIGHT (A)' : 'LEFT (B)', cx, bagTopY+130);
+
+    if(minigame.feedback && Date.now() < minigame.feedbackUntil){
+      ctx.fillStyle = minigame.feedback==='HIT!' ? '#9be564' : '#e05a5a';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(minigame.feedback, cx, bagTopY-20);
+    }
+  }
+}
+
+function drawMinigameIntro(ctx,W,H){
+  ctx.fillStyle = 'rgba(20,20,26,0.85)';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 20px monospace';
+  if(minigame.kind==='treadmill'){
     ctx.fillText('TREADMILL', W/2, H/2-70);
     ctx.font = '13px monospace';
     ctx.fillText('Tap A again and again', W/2, H/2-30);
@@ -709,29 +830,42 @@ function drawMinigame(){
     ctx.fillText('Speed fades if you stop,', W/2, H/2+14);
     ctx.fillText('so keep tapping!', W/2, H/2+32);
     ctx.fillText('You have 15 seconds.', W/2, H/2+58);
-    ctx.fillStyle = '#9be564';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText('Press A to start', W/2, H/2+96);
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = '11px monospace';
-    ctx.fillText('(B to back out)', W/2, H/2+114);
-  } else if(minigame.phase==='running'){
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.font = '12px monospace';
-    ctx.fillText('TAP A TO RUN!', W/2, barY+42);
   } else {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 18px monospace';
+    ctx.fillText('BOXING', W/2, H/2-70);
+    ctx.font = '13px monospace';
+    ctx.fillText('A letter flashes on the bag:', W/2, H/2-30);
+    ctx.fillText('A = right hand, B = left.', W/2, H/2-12);
+    ctx.fillText('Press the matching button', W/2, H/2+14);
+    ctx.fillText('fast and accurately!', W/2, H/2+32);
+    ctx.fillText('You have 10 seconds.', W/2, H/2+58);
+  }
+  ctx.fillStyle = '#9be564';
+  ctx.font = 'bold 14px monospace';
+  ctx.fillText('Press A to start', W/2, H/2+96);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '11px monospace';
+  ctx.fillText('(B to back out)', W/2, H/2+114);
+}
+
+function drawMinigameDone(ctx,W,H){
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 18px monospace';
+  if(minigame.kind==='treadmill'){
     ctx.fillText('NICE WORKOUT!', W/2, H/2-20);
     ctx.font = '14px monospace';
     ctx.fillText('You ran ' + Math.round(minigame.distance) + 'm', W/2, H/2+6);
-    const ready = Date.now() - minigame.doneAt >= MINIGAME_RESULT_GRACE;
-    ctx.font = '12px monospace';
-    ctx.fillStyle = ready ? '#9be564' : 'rgba(255,255,255,0.4)';
-    ctx.fillText(ready ? 'Press A to continue' : 'Reading your result...', W/2, H/2+30);
+  } else {
+    ctx.fillText('TIME!', W/2, H/2-20);
+    ctx.font = '14px monospace';
+    ctx.fillText('You scored ' + minigame.score + ' points', W/2, H/2+6);
   }
+  const ready = Date.now() - minigame.doneAt >= MINIGAME_RESULT_GRACE;
+  ctx.font = '12px monospace';
+  ctx.fillStyle = ready ? '#9be564' : 'rgba(255,255,255,0.4)';
+  ctx.fillText(ready ? 'Press A to continue' : 'Reading your result...', W/2, H/2+30);
 }
 
 function loop(){
@@ -786,15 +920,16 @@ function startGame(){
   window.addEventListener('keydown', e=>{
     if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
     keysDown[e.key]=true;
-    if(e.key===' ') tapMinigame();
+    if(e.key===' ') pressA();
+    if(e.key==='b' || e.key==='B') pressB();
   });
   window.addEventListener('keyup', e=>{ keysDown[e.key]=false; });
   bindHold(document.getElementById('dbtn-up'),    ()=>keysDown['ArrowUp']=true,    ()=>keysDown['ArrowUp']=false);
   bindHold(document.getElementById('dbtn-down'),  ()=>keysDown['ArrowDown']=true,  ()=>keysDown['ArrowDown']=false);
   bindHold(document.getElementById('dbtn-left'),  ()=>keysDown['ArrowLeft']=true,  ()=>keysDown['ArrowLeft']=false);
   bindHold(document.getElementById('dbtn-right'), ()=>keysDown['ArrowRight']=true, ()=>keysDown['ArrowRight']=false);
-  bindHold(document.getElementById('abtn-a'), ()=>{ if(minigameActive) tapMinigame(); }, ()=>{});
-  bindHold(document.getElementById('abtn-b'), ()=>{ if(minigameActive && minigame && (minigame.phase==='running' || minigame.phase==='intro')) startTransition(()=>{ minigameActive=false; minigame=null; }); }, ()=>{});
+  bindHold(document.getElementById('abtn-a'), ()=>{ if(minigameActive) pressA(); }, ()=>{});
+  bindHold(document.getElementById('abtn-b'), ()=>{ if(minigameActive) pressB(); }, ()=>{});
   initEditor();
   loop();
 }
