@@ -391,7 +391,8 @@ const MAPS = {
     bgFrames: GYM_BG_FRAME_SRCS.map(src=>{ const im = new Image(); im.src = src; return im; }),
     bgFrameDuration: 100,
     playerScale: 1.3,
-    zoom: 0.25,
+    zoom: 0.4,
+    speed: 5,
     baseCollision: [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -525,7 +526,7 @@ function computeCamera(){
 }
 
 function updatePlayer(){
-  const speed = 4;
+  const speed = MAPS[currentMapId].speed || 4;
   if(player.moving){
     if(player.px<player.targetPx) player.px=Math.min(player.px+speed, player.targetPx);
     if(player.px>player.targetPx) player.px=Math.max(player.px-speed, player.targetPx);
