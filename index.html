@@ -303,6 +303,7 @@ const MAPS = {
   town: {
     label: 'Pallet Town',
     w:24, h:20,
+    zoom: 0.75,
     bg: (()=>{ const im = new Image(); im.src = TOWN_BG_SRC; return im; })(),
     baseCollision: [
       [1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1],
@@ -337,6 +338,7 @@ const MAPS = {
   city: {
     label: 'Viridian City',
     w:32, h:28,
+    zoom: 0.75,
     bg: (()=>{ const im = new Image(); im.src = CITY_BG_SRC; return im; })(),
     baseCollision: [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,0,0,0,1,1,1,1,1,1,1,1,1,1],
