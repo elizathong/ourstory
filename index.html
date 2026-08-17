@@ -834,15 +834,15 @@ function drawBoxer(ctx, bagCx, bagCy, W, H){
   }
 
   const homeX = px + pdw;
-  const rHome = { x: homeX - 10, y: py + pdh*0.36 };
-  const rTarget = { x: bagCx, y: bagCy - 8 };
+  const rHome = { x: homeX - 10, y: py + pdh*0.56 };
+  const rTarget = { x: bagCx, y: bagCy + 6 };
   const rgx = rHome.x + (rTarget.x-rHome.x)*rp, rgy = rHome.y + (rTarget.y-rHome.y)*rp;
-  drawGlove(ctx, rgx, rgy, rHome.x, rHome.y, 12, '#3ad6e0', rp);
+  drawGlove(ctx, rgx, rgy, rHome.x, rHome.y, 9, '#3ad6e0', rp);
 
-  const lHome = { x: homeX - 16, y: py + pdh*0.56 };
-  const lTarget = { x: bagCx, y: bagCy + 10 };
+  const lHome = { x: homeX - 16, y: py + pdh*0.74 };
+  const lTarget = { x: bagCx, y: bagCy + 24 };
   const lgx = lHome.x + (lTarget.x-lHome.x)*lp, lgy = lHome.y + (lTarget.y-lHome.y)*lp;
-  drawGlove(ctx, lgx, lgy, lHome.x, lHome.y, 12, '#f0c93a', lp);
+  drawGlove(ctx, lgx, lgy, lHome.x, lHome.y, 9, '#f0c93a', lp);
 }
 
 function drawBoxingScene(ctx,W,H){
