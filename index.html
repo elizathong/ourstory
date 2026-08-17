@@ -754,26 +754,61 @@ function drawTreadmillScene(ctx,W,H){
   }
 }
 
-function drawGlove(ctx, x, y, originX, originY, r, color){
+function punchEase(t){
+  if(t < 0.3) return 1 - (1-t/0.3)*(1-t/0.3);
+  if(t < 0.5) return 1;
+  const u = (t-0.5)/0.5;
+  return 1 - u*u;
+}
+
+function drawGlove(ctx, x, y, originX, originY, r, accent, amt){
+  ctx.strokeStyle = '#5b4a86';
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(originX, originY);
+  ctx.lineTo(originX + (x-originX)*0.55, originY + (y-originY)*0.55);
+  ctx.stroke();
   ctx.strokeStyle = '#e8c9a0';
   ctx.lineWidth = 6;
   ctx.beginPath();
-  ctx.moveTo(originX, originY);
+  ctx.moveTo(originX + (x-originX)*0.5, originY + (y-originY)*0.5);
   ctx.lineTo(x, y);
   ctx.stroke();
 
-  ctx.fillStyle = color;
+  const scale = 1 + amt*0.2;
+  const gr = r*scale;
+
+  if(amt > 0.75){
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    for(const a of [-0.5,0,0.5]){
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(a)*gr*1.3, y + Math.sin(a)*gr*1.3);
+      ctx.lineTo(x + Math.cos(a)*gr*2, y + Math.sin(a)*gr*2);
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = '#c0463c';
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.ellipse(x, y, gr, gr*0.9, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x - gr*0.75, y + gr*0.35, gr*0.4, gr*0.32, 0, 0, Math.PI*2);
   ctx.fill();
   ctx.strokeStyle = '#1c1c22';
   ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x-r*0.5, y+r*0.15);
-  ctx.lineTo(x+r*0.5, y+r*0.15);
+  ctx.ellipse(x, y, gr, gr*0.9, 0, 0, Math.PI*2);
+  ctx.stroke();
+
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  ctx.ellipse(x - gr*0.7, y - gr*0.5, gr*0.55, gr*0.28, -0.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#1c1c22';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 }
 
@@ -783,7 +818,7 @@ function drawBoxer(ctx, bagCx, bagCy, W, H){
     if(minigame.lastPunchSide !== side) return 0;
     const t = (now - minigame.lastPunchAt) / PUNCH_ANIM_DURATION;
     if(t < 0 || t > 1) return 0;
-    return Math.sin(t * Math.PI);
+    return punchEase(t);
   };
   const rp = punchAmt('A'), lp = punchAmt('B');
   const stepIn = Math.max(rp, lp) * 5;
@@ -799,15 +834,15 @@ function drawBoxer(ctx, bagCx, bagCy, W, H){
   }
 
   const homeX = px + pdw;
-  const rHome = { x: homeX, y: py + pdh*0.36 };
+  const rHome = { x: homeX - 10, y: py + pdh*0.36 };
   const rTarget = { x: bagCx, y: bagCy - 8 };
   const rgx = rHome.x + (rTarget.x-rHome.x)*rp, rgy = rHome.y + (rTarget.y-rHome.y)*rp;
-  drawGlove(ctx, rgx, rgy, rHome.x, rHome.y, 13, '#3ad6e0');
+  drawGlove(ctx, rgx, rgy, rHome.x, rHome.y, 12, '#3ad6e0', rp);
 
-  const lHome = { x: homeX - 6, y: py + pdh*0.56 };
+  const lHome = { x: homeX - 16, y: py + pdh*0.56 };
   const lTarget = { x: bagCx, y: bagCy + 10 };
   const lgx = lHome.x + (lTarget.x-lHome.x)*lp, lgy = lHome.y + (lTarget.y-lHome.y)*lp;
-  drawGlove(ctx, lgx, lgy, lHome.x, lHome.y, 13, '#f0c93a');
+  drawGlove(ctx, lgx, lgy, lHome.x, lHome.y, 12, '#f0c93a', lp);
 }
 
 function drawBoxingScene(ctx,W,H){
