@@ -612,13 +612,14 @@ const NPCS = [
 ];
 
 /* ---------- Challenges (multiple-choice questions placed on the map) ----------
-   Place a `!` on a tile the player can face and press A on. x/y is the
-   exact tile they must be facing (e.g. the tile a table occupies). */
+   Place a `!` near an object. `tiles` lists every tile of that object the
+   player might face (e.g. all 4 cells of a 2x2 table) so it triggers no
+   matter which side they approach from. */
 const CHALLENGES = [
   {
     id: 'who-made-this',
     map: 'room',
-    x: 4, y: 6,
+    tiles: [[4,5],[5,5],[4,6],[5,6]],
     hintX: 5, hintY: 4.5, // where the floating "!" is drawn, just above the table
     question: 'First challenge: who created this game?',
     options: ['Liz', 'Kay Aun'],
@@ -1214,7 +1215,7 @@ function npcAt(x,y){
 }
 
 function challengeAt(x,y){
-  return CHALLENGES.find(c=>c.map===currentMapId && c.x===x && c.y===y);
+  return CHALLENGES.find(c=>c.map===currentMapId && c.tiles.some(([tx,ty])=>tx===x && ty===y));
 }
 
 function tryInteract(){
