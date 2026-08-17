@@ -72,6 +72,24 @@
     width:100%; height:100%; border-radius:12px;
     background:#000; opacity:0; pointer-events:none;
   }
+  #welcomeDialog{
+    display:none; align-items:center; justify-content:center;
+    width:100%; height:100%; border-radius:12px;
+    background:rgba(20,14,30,.82); padding:20px; text-align:center;
+  }
+  #welcomeDialog.show{ display:flex; }
+  #welcomeDialog .card{
+    background:rgba(255,255,255,.06); border:2px solid var(--coral);
+    border-radius:14px; padding:22px 20px; max-width:270px;
+  }
+  #welcomeDialog h2{ margin:0 0 12px; font-size:16px; color:var(--coral); letter-spacing:1px; }
+  #welcomeDialog p{ margin:0 0 18px; font-size:12.5px; line-height:1.6; opacity:.9; }
+  #welcomeDialog button{
+    font-size:14px; font-weight:600; letter-spacing:.5px;
+    background:var(--coral); color:#2a1030; border:none; padding:11px 28px;
+    border-radius:24px; cursor:pointer; box-shadow:0 4px 0 var(--coral-dark);
+  }
+  #welcomeDialog button:active{ transform:translateY(2px); box-shadow:0 2px 0 var(--coral-dark); }
   #controlRow{
     display:flex; align-items:center; justify-content:space-between;
     width:min(352px, calc(100vw - 8px)); margin-top:26px;
@@ -122,6 +140,13 @@
     <div id="canvasWrap">
       <canvas id="gameCanvas" width="352" height="320"></canvas>
       <div id="fadeOverlay"></div>
+      <div id="welcomeDialog">
+        <div class="card">
+          <h2>Welcome to Our Story &#9829;</h2>
+          <p>There are a few challenges hidden around for you to find and complete.<br><br>In the meantime, just enjoy getting to know more about us through this story.<br><br>Enjoy!</p>
+          <button id="welcomeDialogBtn">Let's go!</button>
+        </div>
+      </div>
     </div>
     <div id="controlRow">
       <div id="dpad">
@@ -180,6 +205,13 @@ render();
 
 nameInput.addEventListener('input', updateReady);
 
+let introDialogueActive = false;
+const welcomeDialogEl = document.getElementById('welcomeDialog');
+document.getElementById('welcomeDialogBtn').addEventListener('click', ()=>{
+  welcomeDialogEl.classList.remove('show');
+  introDialogueActive = false;
+});
+
 confirmBtn.addEventListener('click', ()=>{
   if(!youChar || !nameInput.value.trim()) return;
   playerName = nameInput.value.trim();
@@ -189,6 +221,8 @@ confirmBtn.addEventListener('click', ()=>{
   PLAYER_RUN = RUN_DATA[youChar];
   PLAYER_IDLE = IDLE_DATA_IMG[youChar];
   startGame();
+  welcomeDialogEl.classList.add('show');
+  introDialogueActive = true;
 });
 
 /* =====================================================================
@@ -982,6 +1016,8 @@ function loop(){
     }
   } else if(minigameActive){
     updateMinigame();
+    draw();
+  } else if(introDialogueActive){
     draw();
   } else {
     handleInput();
