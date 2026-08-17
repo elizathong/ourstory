@@ -90,6 +90,30 @@
     border-radius:24px; cursor:pointer; box-shadow:0 4px 0 var(--coral-dark);
   }
   #welcomeDialog button:active{ transform:translateY(2px); box-shadow:0 2px 0 var(--coral-dark); }
+
+  #challengeDialog{
+    display:none; align-items:center; justify-content:center;
+    width:100%; height:100%; border-radius:12px;
+    background:rgba(20,14,30,.82); padding:20px; text-align:center;
+  }
+  #challengeDialog.show{ display:flex; }
+  #challengeDialog .card{
+    background:rgba(255,255,255,.06); border:2px solid var(--coral);
+    border-radius:14px; padding:22px 20px; max-width:270px;
+  }
+  #challengeQuestion{ margin:0 0 16px; font-size:14px; line-height:1.5; color:var(--cream); }
+  #challengeOptions{ display:flex; flex-direction:column; gap:10px; }
+  #challengeOptions button{
+    font-size:14px; font-weight:600; letter-spacing:.5px;
+    background:var(--coral); color:#2a1030; border:none; padding:10px 20px;
+    border-radius:24px; cursor:pointer; box-shadow:0 4px 0 var(--coral-dark);
+  }
+  #challengeOptions button:active{ transform:translateY(2px); box-shadow:0 2px 0 var(--coral-dark); }
+  #challengeOptions button:disabled{ opacity:.6; cursor:default; }
+  #challengeFeedback{ margin-top:14px; font-size:12.5px; min-height:16px; }
+  #challengeFeedback.correct{ color:#9be564; }
+  #challengeFeedback.wrong{ color:#e05a5a; }
+
   #controlRow{
     display:flex; align-items:center; justify-content:space-between;
     width:min(352px, calc(100vw - 8px)); margin-top:26px;
@@ -209,6 +233,13 @@
         <div id="dialogName"></div>
         <div id="dialogText"></div>
         <div id="dialogAdvance">&#9660;</div>
+      </div>
+      <div id="challengeDialog">
+        <div class="card">
+          <p id="challengeQuestion"></p>
+          <div id="challengeOptions"></div>
+          <p id="challengeFeedback"></p>
+        </div>
       </div>
     </div>
     <div id="controlRow">
@@ -542,48 +573,60 @@ const MAPS = {
 let currentMapId = 'room';
 
 /* =====================================================================
-   STORY CONTENT — memories, NPCs, dialogue
+   STORY CONTENT — memories, NPCs, dialogue, challenges
    =====================================================================
    To add a new chapter:
    1. Add a MEMORIES entry (the "token" that gets collected).
    2. Add an NPCS entry: which map they stand on, their x/y tile,
-      which sprite to reuse, which way they face, and their dialogue
-      lines. Set memoryId to the MEMORIES id it should unlock when the
-      conversation finishes.
+      which sprite to reuse, which way they face, their display name,
+      and their dialogue lines. Set memoryId to the MEMORIES id it
+      should unlock when the conversation finishes (omit memoryId for
+      NPCs — like the narrator — that don't unlock a memory).
    3. Place the NPC on a tile your player can walk up to and face
       (not inside a wall / collision tile).
-   Swap HIM_NAME for your partner's real name (or a pet name).
+   Swap HIM_NAME for your partner's real name (or a pet name) — used
+   as the fallback speaker name for any NPC without its own `name`.
    ===================================================================== */
 const HIM_NAME = "Him"; // <-- change this to your partner's name
 
 const MEMORIES = [
-  {
-    id: 'meet-badminton',
-    title: 'The Badminton Court',
-    chapter: 'Chapter 1 — The Beginning',
-    desc: "The first time you really noticed him — smashing shuttlecocks after church, having no idea he'd become your whole world.",
-    icon: '\u{1F3F8}', // badminton emoji
-    unlocked: false
-  }
-  // Add more memory objects here as you write more chapters.
+  // Add memory objects here as you write chapters featuring HIM_NAME.
 ];
 
 const NPCS = [
   {
-    id: 'him-badminton',
+    id: 'town-narrator',
     map: 'town',
     x: 12, y: 10,
     facing: 'down',       // which way the NPC faces / stands
     sprite: 'Bob',        // reuses one of the existing character portraits as a placeholder
-    memoryId: 'meet-badminton',
+    name: 'Narrator',
     dialogue: [
-      "...oh — hey. I don't think we've officially met.",
-      "I saw you out there on the badminton court after service. That smash was kind of terrifying, ngl.",
-      "I'm " + HIM_NAME + ". I have a feeling I'm going to be seeing a lot more of you around here.",
-      "(You didn't know it yet, but this was the start of everything.)"
+      "Oh — hello there! I've been waiting for someone to wander by.",
+      "I'm the narrator of this little story — think of me as your guide.",
+      "There are challenges and memories scattered around this world. Some are silly little games, others are moments worth remembering.",
+      "Go on, explore! I'll be right here if you ever need a nudge."
     ]
   }
   // Add more NPC objects here — one per conversation/moment.
+];
+
+/* ---------- Challenges (multiple-choice questions placed on the map) ----------
+   Place a `!` on a tile the player can face and press A on. x/y is the
+   exact tile they must be facing (e.g. the tile a table occupies). */
+const CHALLENGES = [
+  {
+    id: 'who-made-this',
+    map: 'room',
+    x: 4, y: 6,
+    hintX: 5, hintY: 4.5, // where the floating "!" is drawn, just above the table
+    question: 'First challenge: who created this game?',
+    options: ['Liz', 'Kay Aun'],
+    correct: 'Liz',
+    successText: "That's right — Liz made this whole thing, just for you. ♥",
+    failText: "Not quite... give it another guess!",
+    solved: false
+  }
 ];
 
 let roomGrid = [];
@@ -704,7 +747,7 @@ function updatePlayer(){
 }
 
 function handleInput(){
-  if(dialogueActive) return;
+  if(dialogueActive || challengeActive) return;
   if(keysDown['ArrowUp']) tryMove('up');
   else if(keysDown['ArrowDown']) tryMove('down');
   else if(keysDown['ArrowLeft']) tryMove('left');
@@ -781,6 +824,13 @@ function draw(){
       if(roomGrid[y][x]===1) gctx.fillRect(x*TILE, y*TILE, TILE, TILE);
     }
   }
+  CHALLENGES.filter(c=>c.map===currentMapId && !c.solved).forEach(c=>{
+    const bob = Math.sin(Date.now()/260)*3;
+    gctx.fillStyle = '#ff6f91';
+    gctx.font = 'bold 14px monospace';
+    gctx.textAlign = 'center';
+    gctx.fillText('!', c.hintX*TILE, c.hintY*TILE+bob);
+  });
   gctx.restore();
 }
 
@@ -821,7 +871,7 @@ function boxingPunch(side){
 }
 
 function pressA(){
-  if(introDialogueActive) return;
+  if(introDialogueActive || challengeActive) return;
   if(dialogueActive){ advanceDialogue(); return; }
   if(!minigame){ tryInteract(); return; }
   if(minigame.phase==='intro'){
@@ -837,7 +887,7 @@ function pressA(){
 }
 
 function pressB(){
-  if(introDialogueActive) return;
+  if(introDialogueActive || challengeActive) return;
   if(dialogueActive) return; // no skipping — let them read it :)
   if(!minigame) return;
   if(minigame.phase==='intro'){
@@ -1163,9 +1213,15 @@ function npcAt(x,y){
   return NPCS.find(n=>n.map===currentMapId && n.x===x && n.y===y);
 }
 
+function challengeAt(x,y){
+  return CHALLENGES.find(c=>c.map===currentMapId && c.x===x && c.y===y);
+}
+
 function tryInteract(){
-  if(dialogueActive || player.moving || transition) return false;
+  if(dialogueActive || challengeActive || player.moving || transition) return false;
   const t = facingTile();
+  const challenge = challengeAt(t.x, t.y);
+  if(challenge){ openChallenge(challenge); return true; }
   const npc = npcAt(t.x, t.y);
   if(!npc) return false;
   openDialogue(npc);
@@ -1181,7 +1237,7 @@ function openDialogue(npc){
 }
 
 function renderDialogueLine(){
-  dialogNameEl().textContent = HIM_NAME;
+  dialogNameEl().textContent = activeNPC.name || HIM_NAME;
   dialogTextEl().textContent = activeNPC.dialogue[dialogueLineIdx];
 }
 
@@ -1200,6 +1256,50 @@ function closeDialogue(){
   dialogueActive = false;
   activeNPC = null;
   dialogueLineIdx = 0;
+}
+
+/* ---------- Challenges ---------- */
+let challengeActive = false;
+let activeChallenge = null;
+const challengeDialogEl = ()=>document.getElementById('challengeDialog');
+const challengeQuestionEl = ()=>document.getElementById('challengeQuestion');
+const challengeOptionsEl = ()=>document.getElementById('challengeOptions');
+const challengeFeedbackEl = ()=>document.getElementById('challengeFeedback');
+
+function openChallenge(ch){
+  challengeActive = true;
+  activeChallenge = ch;
+  challengeQuestionEl().textContent = ch.question;
+  challengeFeedbackEl().textContent = '';
+  challengeFeedbackEl().className = '';
+  challengeOptionsEl().innerHTML = '';
+  ch.options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.addEventListener('click', ()=>answerChallenge(opt));
+    challengeOptionsEl().appendChild(btn);
+  });
+  challengeDialogEl().classList.add('show');
+}
+
+function answerChallenge(choice){
+  if(!activeChallenge) return;
+  if(choice === activeChallenge.correct){
+    activeChallenge.solved = true;
+    challengeFeedbackEl().textContent = activeChallenge.successText;
+    challengeFeedbackEl().className = 'correct';
+    Array.from(challengeOptionsEl().children).forEach(btn=>btn.disabled = true);
+    setTimeout(closeChallenge, 1600);
+  } else {
+    challengeFeedbackEl().textContent = activeChallenge.failText;
+    challengeFeedbackEl().className = 'wrong';
+  }
+}
+
+function closeChallenge(){
+  challengeDialogEl().classList.remove('show');
+  challengeActive = false;
+  activeChallenge = null;
 }
 
 /* ---------- Memories ---------- */
