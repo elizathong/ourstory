@@ -790,8 +790,8 @@ function computeCamera(){
   return {camX,camY};
 }
 
-function updatePlayer(){
-  const speed = MAPS[currentMapId].speed || 4;
+function updatePlayer(dt){
+  const speed = (MAPS[currentMapId].speed || 4) * (dt/FRAME_MS);
   if(player.moving){
     if(player.px<player.targetPx) player.px=Math.min(player.px+speed, player.targetPx);
     if(player.px>player.targetPx) player.px=Math.max(player.px-speed, player.targetPx);
@@ -961,13 +961,14 @@ function pressB(){
   }
 }
 
-function updateMinigame(){
+function updateMinigame(dt){
   if(!minigame || minigame.phase!=='running') return;
-  minigame.timeLeft -= 16.7;
+  const f = dt/FRAME_MS;
+  minigame.timeLeft -= dt;
   if(minigame.kind==='treadmill'){
-    minigame.speed = Math.max(0, minigame.speed - 0.045);
-    minigame.distance += minigame.speed * 0.14;
-    minigame.beltOffset = (minigame.beltOffset + minigame.speed*1.5) % 32;
+    minigame.speed = Math.max(0, minigame.speed - 0.045*f);
+    minigame.distance += minigame.speed * 0.14 * f;
+    minigame.beltOffset = (minigame.beltOffset + minigame.speed*1.5*f) % 32;
   } else if(minigame.kind==='boxing'){
     if(Date.now() > minigame.promptDeadline) spawnBoxingPrompt();
   }
@@ -1407,9 +1408,15 @@ function closeJournal(){
   document.getElementById('journalOverlay').style.display = 'none';
 }
 
+const FRAME_MS = 1000/60; // reference frame length that existing per-frame speed constants were tuned against
+let lastFrameTime = null;
+
 function loop(){
+  const now = performance.now();
+  const dt = lastFrameTime===null ? FRAME_MS : Math.min(now - lastFrameTime, FRAME_MS*4);
+  lastFrameTime = now;
+
   if(transition){
-    const now = performance.now();
     const t = Math.min(1, (now - transition.start) / transition.duration);
     draw();
     const alpha = transition.phase === 'out' ? t : 1 - t;
@@ -1424,13 +1431,13 @@ function loop(){
       }
     }
   } else if(minigameActive){
-    updateMinigame();
+    updateMinigame(dt);
     draw();
   } else if(introDialogueActive){
     draw();
   } else {
     handleInput();
-    updatePlayer();
+    updatePlayer(dt);
     draw();
   }
   requestAnimationFrame(loop);
