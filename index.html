@@ -580,7 +580,7 @@ const MAPS = {
       {x:59,y:12,dir:'right', to:'city', spawnX:1, spawnY:16, spawnFacing:'right'},
       {x:59,y:13,dir:'right', to:'city', spawnX:1, spawnY:16, spawnFacing:'right'},
       {x:59,y:14,dir:'right', to:'city', spawnX:1, spawnY:16, spawnFacing:'right'},
-      {x:34,y:21,dir:'up', to:'badminton', spawnX:11, spawnY:14, spawnFacing:'up'}
+      {x:34,y:22,dir:'up', to:'badminton', spawnX:11, spawnY:14, spawnFacing:'up'}
     ]
   },
   badminton: {
@@ -971,7 +971,36 @@ function draw(){
     gctx.textAlign = 'center';
     gctx.fillText('!', s.hintX*TILE, s.hintY*TILE+bob);
   });
+  if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   gctx.restore();
+}
+
+function drawCourt1Rally(ctx){
+  const cx = 6*TILE + TILE/2;
+  const topY = 4*TILE + TILE*0.65, botY = 8*TILE + TILE*0.65;
+  const cycle = (Date.now() % 1800) / 1800;
+  const wave = cycle < 0.5 ? cycle*2 : 2 - cycle*2; // 0 -> 1 -> 0
+  const shuttleY = topY + (botY - topY) * wave;
+  const arc = Math.sin(wave * Math.PI) * 14;
+
+  // rackets: small ovals near each NPC's hand, tilted toward the net
+  ctx.strokeStyle = '#8a6a3a';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(cx+9, topY-6, 5, 7, 0.5, 0, Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx+9, botY+6, 5, 7, -0.5, 0, Math.PI*2); ctx.stroke();
+
+  // shuttlecock: white cork + light cone
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(cx, shuttleY - arc, 2.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.beginPath();
+  ctx.moveTo(cx-4, shuttleY - arc - 7);
+  ctx.lineTo(cx+4, shuttleY - arc - 7);
+  ctx.lineTo(cx, shuttleY - arc - 1);
+  ctx.closePath();
+  ctx.fill();
 }
 
 // ---------- Gym minigames ----------
@@ -983,7 +1012,11 @@ const BOXING_DURATION = 10000;
 const BOXING_PROMPT_WINDOW = 800; // ms to react to each prompt
 const PUNCH_ANIM_DURATION = 220; // ms for a fist to travel out and back
 const BADMINTON_DURATION = 10000;
-const BADMINTON_WINDOW = 650; // ms the shuttle is hittable each pass
+const BADMINTON_SHUTTLE_MS = 1100; // time for the shuttle to cross from launch to its target
+const BADMINTON_HIT_RADIUS = 22;
+const BAD_MIN_X = 190, BAD_MAX_X = 322, BAD_MIN_Y = 150, BAD_MAX_Y = 215; // player's movable zone
+const BAD_LAUNCH_X = 70, BAD_LAUNCH_Y = 140; // where the shuttle launches from (opponent's side)
+const BADMINTON_PLAYER_SPEED = 3.2;
 
 function startMinigame(kind){
   if(kind==='treadmill'){
@@ -991,7 +1024,10 @@ function startMinigame(kind){
   } else if(kind==='boxing'){
     minigame = { kind, score:0, timeLeft:BOXING_DURATION, phase:'intro', doneAt:0, prompt:null, promptDeadline:0, feedback:null, feedbackUntil:0, lastPunchSide:null, lastPunchAt:0 };
   } else if(kind==='badminton'){
-    minigame = { kind, score:0, timeLeft:BADMINTON_DURATION, phase:'intro', doneAt:0, active:false, windowDeadline:0, nextWindowAt:0, feedback:null, feedbackUntil:0 };
+    minigame = { kind, score:0, timeLeft:BADMINTON_DURATION, phase:'intro', doneAt:0,
+      px:(BAD_MIN_X+BAD_MAX_X)/2, py:(BAD_MIN_Y+BAD_MAX_Y)/2,
+      sx0:BAD_LAUNCH_X, sy0:BAD_LAUNCH_Y, sx1:0, sy1:0, shuttleX:BAD_LAUNCH_X, shuttleY:BAD_LAUNCH_Y,
+      shuttleStart:0, resolved:false, feedback:null, feedbackUntil:0 };
   }
   minigameActive = true;
 }
@@ -1001,17 +1037,24 @@ function spawnBoxingPrompt(){
   minigame.promptDeadline = Date.now() + BOXING_PROMPT_WINDOW;
 }
 
-function spawnBadmintonWindow(){
-  minigame.active = true;
-  minigame.windowDeadline = Date.now() + BADMINTON_WINDOW;
+function spawnShuttle(){
+  minigame.sx0 = BAD_LAUNCH_X;
+  minigame.sy0 = BAD_LAUNCH_Y;
+  minigame.sx1 = BAD_MIN_X + Math.random()*(BAD_MAX_X-BAD_MIN_X);
+  minigame.sy1 = BAD_MIN_Y + Math.random()*(BAD_MAX_Y-BAD_MIN_Y);
+  minigame.shuttleStart = Date.now();
+  minigame.resolved = false;
 }
 
 function badmintonSwing(){
-  if(minigame.active){
+  const t = Math.min(1, (Date.now()-minigame.shuttleStart)/BADMINTON_SHUTTLE_MS);
+  const dx = minigame.px-minigame.shuttleX, dy = minigame.py-minigame.shuttleY;
+  const dist = Math.hypot(dx, dy);
+  if(!minigame.resolved && t > 0.45 && dist < BADMINTON_HIT_RADIUS){
     minigame.score += 1;
     minigame.feedback = 'HIT!';
-    minigame.active = false;
-    minigame.nextWindowAt = Date.now() + 300 + Math.random()*400;
+    minigame.resolved = true;
+    spawnShuttle();
   } else {
     minigame.feedback = 'MISS';
   }
@@ -1039,7 +1082,7 @@ function pressA(){
   if(minigame.phase==='intro'){
     minigame.phase = 'running';
     if(minigame.kind==='boxing') spawnBoxingPrompt();
-    else if(minigame.kind==='badminton') spawnBadmintonWindow();
+    else if(minigame.kind==='badminton') spawnShuttle();
   } else if(minigame.phase==='running'){
     if(minigame.kind==='treadmill') minigame.speed = Math.min(10, minigame.speed + 1.3);
     else if(minigame.kind==='boxing') boxingPunch('A');
@@ -1073,13 +1116,19 @@ function updateMinigame(dt){
   } else if(minigame.kind==='boxing'){
     if(Date.now() > minigame.promptDeadline) spawnBoxingPrompt();
   } else if(minigame.kind==='badminton'){
-    if(minigame.active && Date.now() > minigame.windowDeadline){
-      minigame.active = false;
+    const spd = BADMINTON_PLAYER_SPEED * f;
+    if(keysDown['ArrowLeft']) minigame.px = Math.max(BAD_MIN_X, minigame.px - spd);
+    if(keysDown['ArrowRight']) minigame.px = Math.min(BAD_MAX_X, minigame.px + spd);
+    if(keysDown['ArrowUp']) minigame.py = Math.max(BAD_MIN_Y, minigame.py - spd);
+    if(keysDown['ArrowDown']) minigame.py = Math.min(BAD_MAX_Y, minigame.py + spd);
+
+    const t = Math.min(1, (Date.now()-minigame.shuttleStart)/BADMINTON_SHUTTLE_MS);
+    minigame.shuttleX = minigame.sx0 + (minigame.sx1-minigame.sx0)*t;
+    minigame.shuttleY = minigame.sy0 + (minigame.sy1-minigame.sy0)*t;
+    if(t >= 1 && !minigame.resolved){
       minigame.feedback = 'MISS';
       minigame.feedbackUntil = Date.now() + 150;
-      minigame.nextWindowAt = Date.now() + 300 + Math.random()*400;
-    } else if(!minigame.active && Date.now() >= minigame.nextWindowAt){
-      spawnBadmintonWindow();
+      spawnShuttle();
     }
   }
   if(minigame.timeLeft <= 0){
@@ -1318,65 +1367,93 @@ function drawBoxingScene(ctx,W,H){
 }
 
 function drawBadmintonScene(ctx,W,H){
-  const cx = W/2, netY = 140, courtTop = 50, courtBottom = 230;
-  const sway = minigame.phase==='running' ? Math.sin(Date.now()/300)*3 : 0;
+  const groundY = 225, netX = 176, netTopY = 140;
 
-  ctx.fillStyle = '#3f7a45';
-  ctx.fillRect(cx-90, courtTop, 180, courtBottom-courtTop);
-  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(cx-90, courtTop, 180, courtBottom-courtTop);
+  // sky/court backdrop
+  ctx.fillStyle = '#bfe0c8';
+  ctx.fillRect(0, 44, W, groundY-44);
+  ctx.fillStyle = '#4c8c52';
+  ctx.fillRect(0, groundY, W, H-groundY);
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
 
+  // net
   ctx.strokeStyle = '#ddd';
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(cx-90, netY);
-  ctx.lineTo(cx+90, netY);
+  ctx.moveTo(netX, netTopY);
+  ctx.lineTo(netX, groundY);
   ctx.stroke();
-  ctx.fillStyle = '#444';
-  ctx.fillRect(cx-92, netY-14, 5, 28);
-  ctx.fillRect(cx+87, netY-14, 5, 28);
+  for(let y=netTopY; y<groundY; y+=8){
+    ctx.beginPath(); ctx.moveTo(netX, y); ctx.lineTo(netX+6, y+6); ctx.stroke();
+  }
 
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'center';
   ctx.font = 'bold 16px monospace';
-  ctx.fillText('BADMINTON', W/2, 30);
+  ctx.fillText('BADMINTON', W/2, 26);
 
   const barW = 200, barX = W/2-barW/2, barY = 250;
+  ctx.fillStyle = '#fff';
   ctx.font = '14px monospace';
   ctx.fillText('SCORE: ' + minigame.score, W/2, barY-10);
   ctx.strokeStyle = '#fff'; ctx.strokeRect(barX, barY, barW, 10);
   ctx.fillStyle = '#e05a5a';
   ctx.fillRect(barX, barY, barW*(minigame.timeLeft/BADMINTON_DURATION), 10);
 
-  const pdw = NATIVE*SCALE*1.1, pdh = 32*SCALE*1.1;
-  const px = cx - pdw/2 + sway, py = courtBottom - pdh + 14;
+  if(minigame.phase!=='running') return;
+
+  // player's movable zone (subtle boundary so the player can see their range)
+  ctx.strokeStyle = 'rgba(28,28,34,0.25)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(BAD_MIN_X-14, BAD_MIN_Y-14, (BAD_MAX_X-BAD_MIN_X)+28, (BAD_MAX_Y-BAD_MIN_Y)+28);
+
+  // shuttle ground shadow (sells the side-view height)
+  const heightAboveGround = groundY - minigame.shuttleY;
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(minigame.shuttleX, groundY-2, 6, 2.5, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // player marker (facing left, toward the net)
+  const pdw = NATIVE*SCALE*0.9, pdh = 32*SCALE*0.9;
   if(PLAYER_IDLE && PLAYER_IDLE.complete){
-    const sx = DIR_COL['up']*NATIVE;
-    ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, px,py,pdw,pdh);
+    const sx = DIR_COL['left']*NATIVE;
+    ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, minigame.px-pdw/2, minigame.py-pdh*0.7, pdw, pdh);
+  }
+  // hit-radius ring, brighter when the shuttle is near
+  const dist = Math.hypot(minigame.px-minigame.shuttleX, minigame.py-minigame.shuttleY);
+  const near = dist < BADMINTON_HIT_RADIUS;
+  ctx.strokeStyle = near ? '#f0c93a' : 'rgba(28,28,34,0.3)';
+  ctx.lineWidth = near ? 2.5 : 1.5;
+  ctx.beginPath();
+  ctx.arc(minigame.px, minigame.py, BADMINTON_HIT_RADIUS, 0, Math.PI*2);
+  ctx.stroke();
+
+  // shuttlecock
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(minigame.shuttleX, minigame.shuttleY, 3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = near ? '#f0c93a' : 'rgba(255,255,255,0.8)';
+  ctx.beginPath();
+  ctx.moveTo(minigame.shuttleX-5, minigame.shuttleY-9);
+  ctx.lineTo(minigame.shuttleX+5, minigame.shuttleY-9);
+  ctx.lineTo(minigame.shuttleX, minigame.shuttleY-1);
+  ctx.closePath();
+  ctx.fill();
+
+  if(near){
+    ctx.fillStyle = '#9be564';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('A!', minigame.px, minigame.py-32);
   }
 
-  if(minigame.phase==='running'){
-    const active = minigame.active;
-    const r = active ? 12 : 6;
-    ctx.fillStyle = active ? '#fff6d8' : 'rgba(255,255,255,0.4)';
-    ctx.strokeStyle = active ? '#f0c93a' : 'rgba(240,201,58,0.3)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(cx, netY+28, r, 0, Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
-    if(active){
-      ctx.fillStyle = '#9be564';
-      ctx.font = 'bold 13px monospace';
-      ctx.fillText('SWING!', cx, netY+60);
-    }
-
-    if(minigame.feedback && Date.now() < minigame.feedbackUntil){
-      ctx.fillStyle = minigame.feedback==='HIT!' ? '#9be564' : '#e05a5a';
-      ctx.font = 'bold 14px monospace';
-      ctx.fillText(minigame.feedback, cx, courtTop-15);
-    }
+  if(minigame.feedback && Date.now() < minigame.feedbackUntil){
+    ctx.fillStyle = minigame.feedback==='HIT!' ? '#9be564' : '#e05a5a';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText(minigame.feedback, W/2, 60);
   }
 }
 
@@ -1405,10 +1482,10 @@ function drawMinigameIntro(ctx,W,H){
   } else if(minigame.kind==='badminton'){
     ctx.fillText('BADMINTON', W/2, H/2-70);
     ctx.font = '13px monospace';
-    ctx.fillText('Watch the shuttle cross', W/2, H/2-30);
-    ctx.fillText('the net and glow bright.', W/2, H/2-12);
-    ctx.fillText('Press A right then to', W/2, H/2+14);
-    ctx.fillText('return the rally!', W/2, H/2+32);
+    ctx.fillText('Use the arrows to move', W/2, H/2-30);
+    ctx.fillText('under the falling shuttle.', W/2, H/2-12);
+    ctx.fillText('Press A when it glows', W/2, H/2+14);
+    ctx.fillText('to return the rally!', W/2, H/2+32);
     ctx.fillText('You have 10 seconds.', W/2, H/2+58);
   }
   ctx.fillStyle = '#9be564';
