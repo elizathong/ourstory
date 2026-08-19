@@ -75,16 +75,17 @@
   #welcomeDialog{
     display:none; align-items:center; justify-content:center;
     width:100%; height:100%; border-radius:12px; overflow:auto;
-    background:rgba(20,14,30,.82); padding:14px; text-align:center;
+    background:rgba(10,7,16,.92); padding:14px; text-align:center;
   }
   #welcomeDialog.show{ display:flex; }
   #welcomeDialog .card{
-    background:rgba(255,255,255,.06); border:2px solid var(--coral);
+    background:#241d38; border:2px solid var(--coral);
     border-radius:14px; padding:16px 18px; max-width:270px;
     max-height:100%; overflow-y:auto;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
   }
   #welcomeDialog h2{ margin:0 0 10px; font-size:15px; color:var(--coral); letter-spacing:1px; }
-  #welcomeDialog p{ margin:0 0 14px; font-size:12px; line-height:1.45; opacity:.9; }
+  #welcomeDialog p{ margin:0 0 14px; font-size:12px; line-height:1.45; color:var(--cream); opacity:1; }
   #welcomeDialog button{
     font-size:13px; font-weight:600; letter-spacing:.5px;
     background:var(--coral); color:#2a1030; border:none; padding:10px 20px;
@@ -1014,8 +1015,9 @@ const PUNCH_ANIM_DURATION = 220; // ms for a fist to travel out and back
 const BADMINTON_DURATION = 10000;
 const BADMINTON_SHUTTLE_MS = 1100; // time for the shuttle to cross from launch to its target
 const BADMINTON_HIT_RADIUS = 22;
-const BAD_MIN_X = 190, BAD_MAX_X = 322, BAD_MIN_Y = 150, BAD_MAX_Y = 215; // player's movable zone
-const BAD_LAUNCH_X = 70, BAD_LAUNCH_Y = 140; // where the shuttle launches from (opponent's side)
+const BAD_MIN_X = 34, BAD_MAX_X = 148, BAD_MIN_Y = 150, BAD_MAX_Y = 215; // player's movable zone (left of the net)
+const BAD_LAUNCH_X = 258, BAD_LAUNCH_Y = 162; // where the shuttle launches from (opponent's racket)
+const BAD_OPPONENT_X = 262, BAD_OPPONENT_Y = 183; // opponent's fixed position on the right
 const BADMINTON_PLAYER_SPEED = 3.2;
 
 function startMinigame(kind){
@@ -1404,32 +1406,40 @@ function drawBadmintonScene(ctx,W,H){
 
   if(minigame.phase!=='running') return;
 
-  // player's movable zone (subtle boundary so the player can see their range)
-  ctx.strokeStyle = 'rgba(28,28,34,0.25)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(BAD_MIN_X-14, BAD_MIN_Y-14, (BAD_MAX_X-BAD_MIN_X)+28, (BAD_MAX_Y-BAD_MIN_Y)+28);
+  // opponent, fixed on the right side of the net
+  const odw = NATIVE*SCALE*0.9, odh = 32*SCALE*0.9;
+  const opponentImg = IDLE_DATA_IMG['Amelia'];
+  if(opponentImg && opponentImg.complete){
+    const sx = DIR_COL['left']*NATIVE;
+    ctx.drawImage(opponentImg, sx,0,NATIVE,32, BAD_OPPONENT_X-odw/2, BAD_OPPONENT_Y-odh*0.7, odw, odh);
+  }
 
   // shuttle ground shadow (sells the side-view height)
-  const heightAboveGround = groundY - minigame.shuttleY;
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath();
   ctx.ellipse(minigame.shuttleX, groundY-2, 6, 2.5, 0, 0, Math.PI*2);
   ctx.fill();
 
-  // player marker (facing left, toward the net)
-  const pdw = NATIVE*SCALE*0.9, pdh = 32*SCALE*0.9;
-  if(PLAYER_IDLE && PLAYER_IDLE.complete){
-    const sx = DIR_COL['left']*NATIVE;
-    ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, minigame.px-pdw/2, minigame.py-pdh*0.7, pdw, pdh);
-  }
+  // player's movable zone (subtle boundary so the player can see their range)
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(BAD_MIN_X-14, BAD_MIN_Y-14, (BAD_MAX_X-BAD_MIN_X)+28, (BAD_MAX_Y-BAD_MIN_Y)+28);
+
   // hit-radius ring, brighter when the shuttle is near
   const dist = Math.hypot(minigame.px-minigame.shuttleX, minigame.py-minigame.shuttleY);
   const near = dist < BADMINTON_HIT_RADIUS;
-  ctx.strokeStyle = near ? '#f0c93a' : 'rgba(28,28,34,0.3)';
+  ctx.strokeStyle = near ? '#f0c93a' : 'rgba(255,255,255,0.4)';
   ctx.lineWidth = near ? 2.5 : 1.5;
   ctx.beginPath();
   ctx.arc(minigame.px, minigame.py, BADMINTON_HIT_RADIUS, 0, Math.PI*2);
   ctx.stroke();
+
+  // player, controllable, facing right toward the net
+  const pdw = NATIVE*SCALE*0.9, pdh = 32*SCALE*0.9;
+  if(PLAYER_IDLE && PLAYER_IDLE.complete){
+    const sx = DIR_COL['right']*NATIVE;
+    ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, minigame.px-pdw/2, minigame.py-pdh*0.7, pdw, pdh);
+  }
 
   // shuttlecock
   ctx.fillStyle = '#fff';
