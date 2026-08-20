@@ -681,10 +681,17 @@ let currentMapId = 'room';
    Swap HIM_NAME for your partner's real name (or a pet name) — used
    as the fallback speaker name for any NPC without its own `name`.
    ===================================================================== */
-const HIM_NAME = "Him"; // <-- change this to your partner's name
+const HIM_NAME = "Kay Aun";
 
 const MEMORIES = [
-  // Add memory objects here as you write chapters featuring HIM_NAME.
+  {
+    id: 'meet-badminton',
+    title: 'The Badminton Court',
+    chapter: 'Chapter 1 — The Beginning',
+    desc: "The first time you really noticed him — smashing shuttlecocks after church, having no idea he'd become your whole world.",
+    icon: '🏸',
+    unlocked: false
+  }
 ];
 
 const NPCS = [
@@ -700,32 +707,35 @@ const NPCS = [
       "I'm the narrator of this little story — think of me as your guide.",
       "There are challenges and memories scattered around this world. Some are silly little games, others are moments worth remembering.",
       "Go on, explore! I'll be right here if you ever need a nudge."
-    ]
+    ],
+    followupChallenge: 'where-did-liz-notice-him'
   },
   {
-    id: 'badminton-player-1',
+    id: 'badminton-kayaun',
     map: 'badminton',
     x: 6, y: 4,
     facing: 'down',
     sprite: 'Adam',
-    name: 'Regular',
+    name: 'Kay Aun',
     dialogue: [
-      "Focus... focus...",
-      "This rally's been going for ten minutes straight.",
-      "Court 2's wide open if you want to play a round yourself!"
-    ]
+      "(He's still catching his breath from the last rally.)",
+      "Hah — didn't expect an audience after service today.",
+      "This is actually where he first noticed Liz, you know. She was right over there, absolutely destroying everyone at doubles.",
+      "He had no idea back then she'd end up being... well, everything."
+    ],
+    memoryId: 'meet-badminton'
   },
   {
-    id: 'badminton-player-2',
+    id: 'badminton-liz',
     map: 'badminton',
     x: 6, y: 8,
     facing: 'up',
     sprite: 'Alex',
-    name: 'Regular',
+    name: 'Liz',
     dialogue: [
-      "Nice form, right?",
-      "We come here pretty much every weekend.",
-      "Good luck if you try the other court — it's harder than it looks!"
+      "Church always ran long, so a few of them started playing badminton after service to unwind.",
+      "That's actually how she and Kay Aun first crossed paths — he kept losing on purpose just to keep playing another round, she thinks.",
+      "Funny how a silly little court ended up mattering so much."
     ]
   }
   // Add more NPC objects here — one per conversation/moment.
@@ -746,6 +756,17 @@ const CHALLENGES = [
     correct: 'Liz',
     successText: "That's right — Liz made this whole thing, just for you. ♥",
     failText: "Not quite... give it another guess!",
+    solved: false
+  },
+  {
+    id: 'where-did-liz-notice-him',
+    map: null, // triggered by finishing the narrator's dialogue, not a map location
+    tiles: [],
+    question: 'Where did Liz first notice him?',
+    options: ['Church badminton court', 'The Pokémon Center'],
+    correct: 'Church badminton court',
+    successText: "That's it! Go find the badminton court in Celadon City — there's a rally worth watching.",
+    failText: "Hmm, not quite. Think about where the two of them used to unwind after church.",
     solved: false
   }
 ];
@@ -1606,9 +1627,14 @@ function advanceDialogue(){
 function closeDialogue(){
   dialogBoxEl().style.display = 'none';
   if(activeNPC && activeNPC.memoryId) unlockMemory(activeNPC.memoryId);
+  const followupId = activeNPC && activeNPC.followupChallenge;
   dialogueActive = false;
   activeNPC = null;
   dialogueLineIdx = 0;
+  if(followupId){
+    const ch = CHALLENGES.find(c=>c.id===followupId);
+    if(ch && !ch.solved) openChallenge(ch);
+  }
 }
 
 /* ---------- Challenges ---------- */
