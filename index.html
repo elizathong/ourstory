@@ -69,12 +69,12 @@
     background:#000; touch-action:none;
   }
   #fadeOverlay{
-    width:100%; height:100%; border-radius:12px;
+    position:absolute; inset:0; border-radius:12px;
     background:#000; opacity:0; pointer-events:none;
   }
   #welcomeDialog{
     display:none; align-items:center; justify-content:center;
-    width:100%; height:100%; border-radius:12px; overflow:auto;
+    position:absolute; inset:0; border-radius:12px; overflow:auto;
     background:rgba(10,7,16,.92); padding:14px; text-align:center;
   }
   #welcomeDialog.show{ display:flex; }
@@ -95,7 +95,7 @@
 
   #challengeDialog{
     display:none; align-items:center; justify-content:center;
-    width:100%; height:100%; border-radius:12px;
+    position:absolute; inset:0; border-radius:12px;
     background:rgba(20,14,30,.82); padding:20px; text-align:center;
   }
   #challengeDialog.show{ display:flex; }
@@ -1126,7 +1126,8 @@ function pressA(){
 }
 
 function pressB(){
-  if(introDialogueActive || challengeActive) return;
+  if(introDialogueActive) return;
+  if(challengeActive){ closeChallenge(); return; } // escape hatch in case the on-screen buttons are unreachable
   if(dialogueActive) return; // no skipping — let them read it :)
   if(!minigame) return;
   if(minigame.phase==='intro'){
