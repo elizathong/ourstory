@@ -188,6 +188,7 @@
   }
   #journalOverlay p.sub{ text-align:center; opacity:.7; font-size:12px; margin:0 0 20px; }
   #journalList{ display:flex; flex-direction:column; gap:10px; max-width:420px; margin:0 auto; }
+  .journalEmpty{ text-align:center; opacity:.6; font-size:13px; margin:30px 0 0; }
   .memoryCard{
     display:flex; gap:12px; align-items:center; background:rgba(255,255,255,.06);
     border:2px solid rgba(255,255,255,.15); border-radius:12px; padding:10px 12px;
@@ -959,21 +960,29 @@ function draw(){
     }
   }
   CHALLENGES.filter(c=>c.map===currentMapId && !c.solved).forEach(c=>{
-    const bob = Math.sin(Date.now()/260)*3;
-    gctx.fillStyle = '#ff6f91';
-    gctx.font = 'bold 14px monospace';
-    gctx.textAlign = 'center';
-    gctx.fillText('!', c.hintX*TILE, c.hintY*TILE+bob);
+    drawHintMarker(gctx, c.hintX*TILE, c.hintY*TILE, '#ff6f91');
   });
   MINIGAME_SPOTS.filter(s=>s.map===currentMapId).forEach(s=>{
-    const bob = Math.sin(Date.now()/260)*3;
-    gctx.fillStyle = '#9be564';
-    gctx.font = 'bold 14px monospace';
-    gctx.textAlign = 'center';
-    gctx.fillText('!', s.hintX*TILE, s.hintY*TILE+bob);
+    drawHintMarker(gctx, s.hintX*TILE, s.hintY*TILE, '#9be564');
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   gctx.restore();
+}
+
+function drawHintMarker(ctx, x, y, color){
+  const bob = Math.sin(Date.now()/260)*3;
+  const cy = y + bob;
+  ctx.fillStyle = 'rgba(20,16,26,0.88)';
+  ctx.beginPath();
+  ctx.arc(x, cy-4, 10, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.font = 'bold 15px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('!', x, cy);
 }
 
 function drawCourt1Rally(ctx){
@@ -1666,6 +1675,13 @@ function showMemoryToast(mem){
 function renderJournal(){
   const list = document.getElementById('journalList');
   list.innerHTML = '';
+  if(MEMORIES.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'journalEmpty';
+    empty.textContent = "No memories yet — they'll show up here as you find them.";
+    list.appendChild(empty);
+    return;
+  }
   MEMORIES.forEach(mem=>{
     const card = document.createElement('div');
     card.className = 'memoryCard' + (mem.unlocked ? '' : ' locked');
