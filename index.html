@@ -98,11 +98,14 @@
     position:absolute; inset:0; border-radius:12px;
     background:rgba(20,14,30,.82); padding:20px; text-align:center;
   }
-  #challengeDialog.show{ display:flex; }
+  #challengeDialog.show{ display:flex; animation:challengeOverlayFade .3s ease; }
   #challengeDialog .card{
     background:rgba(255,255,255,.06); border:2px solid var(--coral);
     border-radius:14px; padding:22px 20px; max-width:270px;
   }
+  #challengeDialog.show .card{ animation:challengeCardIn .35s ease; }
+  @keyframes challengeOverlayFade{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes challengeCardIn{ from{ opacity:0; transform:scale(.86) translateY(8px); } to{ opacity:1; transform:scale(1) translateY(0); } }
   #challengeQuestion{ margin:0 0 16px; font-size:14px; line-height:1.5; color:var(--cream); }
   #challengeOptions{ display:flex; flex-direction:column; gap:10px; }
   #challengeOptions button{
@@ -156,7 +159,9 @@
     background:var(--cream); color:#2a1030; border:3px solid #2a1030; border-radius:10px;
     padding:12px 14px 16px; box-shadow:0 6px 0 rgba(0,0,0,.35);
     font-family:'Segoe UI',system-ui,sans-serif;
+    opacity:1; transition:opacity .4s ease;
   }
+  #dialogBox.fadeOut{ opacity:0; }
   #dialogName{
     font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
     color:var(--coral-dark); margin-bottom:4px;
@@ -903,7 +908,7 @@ function updatePlayer(dt){
 }
 
 function handleInput(){
-  if(dialogueActive || challengeActive) return;
+  if(dialogueActive || challengeActive || followupPending) return;
   if(keysDown['ArrowUp']) tryMove('up');
   else if(keysDown['ArrowDown']) tryMove('down');
   else if(keysDown['ArrowLeft']) tryMove('left');
@@ -936,15 +941,22 @@ function drawNPC(ctx, npc){
   const sx = dirIdx*NATIVE;
   ctx.drawImage(img, sx,0,NATIVE,32, px,py,dw,dh);
 
-  // small bobbing "!" hint above NPCs with a memory the player hasn't collected yet
-  const mem = npc.memoryId ? MEMORIES.find(m=>m.id===npc.memoryId) : null;
-  if(mem && !mem.unlocked){
-    const bob = Math.sin(Date.now()/260)*3;
-    ctx.fillStyle = '#ff6f91';
-    ctx.font = 'bold 14px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('!', px+dw/2, py-6+bob);
+  // hint marker above NPCs who still have something worth talking about
+  if(npcHasHint(npc)){
+    drawHintMarker(ctx, px+dw/2, py-6, '#ffd76f');
   }
+}
+
+function npcHasHint(npc){
+  if(npc.memoryId){
+    const mem = MEMORIES.find(m=>m.id===npc.memoryId);
+    if(mem && !mem.unlocked) return true;
+  }
+  if(npc.followupChallenge){
+    const ch = CHALLENGES.find(c=>c.id===npc.followupChallenge);
+    if(ch && !ch.solved) return true;
+  }
+  return false;
 }
 
 function draw(){
@@ -1565,6 +1577,7 @@ function drawMinigameDone(ctx,W,H){
 
 /* ---------- Dialogue / NPC interaction ---------- */
 let dialogueActive = false;
+let followupPending = false;
 let activeNPC = null;
 let dialogueLineIdx = 0;
 const dialogBoxEl = ()=>document.getElementById('dialogBox');
@@ -1591,7 +1604,7 @@ function minigameSpotAt(x,y){
 }
 
 function tryInteract(){
-  if(dialogueActive || challengeActive || minigameActive || player.moving || transition) return false;
+  if(dialogueActive || challengeActive || followupPending || minigameActive || player.moving || transition) return false;
   const t = facingTile();
   const challenge = challengeAt(t.x, t.y);
   if(challenge){ openChallenge(challenge); return true; }
@@ -1626,16 +1639,24 @@ function advanceDialogue(){
 }
 
 function closeDialogue(){
-  dialogBoxEl().style.display = 'none';
   if(activeNPC && activeNPC.memoryId) unlockMemory(activeNPC.memoryId);
   const followupId = activeNPC && activeNPC.followupChallenge;
   dialogueActive = false;
   activeNPC = null;
   dialogueLineIdx = 0;
-  if(followupId){
-    const ch = CHALLENGES.find(c=>c.id===followupId);
-    if(ch && !ch.solved) openChallenge(ch);
+  const ch = followupId ? CHALLENGES.find(c=>c.id===followupId) : null;
+  if(ch && !ch.solved){
+    followupPending = true;
+    dialogBoxEl().classList.add('fadeOut');
+    setTimeout(()=>{
+      dialogBoxEl().style.display = 'none';
+      dialogBoxEl().classList.remove('fadeOut');
+      followupPending = false;
+      openChallenge(ch);
+    }, 550);
+    return;
   }
+  dialogBoxEl().style.display = 'none';
 }
 
 /* ---------- Challenges ---------- */
