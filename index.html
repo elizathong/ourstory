@@ -784,11 +784,18 @@ const MINIGAME_SPOTS = [
   {
     id: 'badminton-court-2',
     map: 'badminton',
-    tiles: [[16,9]],
+    tiles: [[16,9],[16,8],[16,10],[15,9],[17,9]],
     hintX: 16.5, hintY: 8.3,
-    kind: 'badminton'
+    kind: 'badminton',
+    requiresMemory: 'meet-badminton'
   }
 ];
+
+function spotUnlocked(spot){
+  if(!spot.requiresMemory) return true;
+  const mem = MEMORIES.find(m=>m.id===spot.requiresMemory);
+  return !!(mem && mem.unlocked);
+}
 
 let roomGrid = [];
 
@@ -995,7 +1002,7 @@ function draw(){
   CHALLENGES.filter(c=>c.map===currentMapId && !c.solved).forEach(c=>{
     drawHintMarker(gctx, c.hintX*TILE, c.hintY*TILE, '#ff6f91');
   });
-  MINIGAME_SPOTS.filter(s=>s.map===currentMapId).forEach(s=>{
+  MINIGAME_SPOTS.filter(s=>s.map===currentMapId && spotUnlocked(s)).forEach(s=>{
     drawHintMarker(gctx, s.hintX*TILE, s.hintY*TILE, '#9be564');
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
@@ -1600,7 +1607,7 @@ function challengeAt(x,y){
 }
 
 function minigameSpotAt(x,y){
-  return MINIGAME_SPOTS.find(s=>s.map===currentMapId && s.tiles.some(([tx,ty])=>tx===x && ty===y));
+  return MINIGAME_SPOTS.find(s=>s.map===currentMapId && spotUnlocked(s) && s.tiles.some(([tx,ty])=>tx===x && ty===y));
 }
 
 function tryInteract(){
