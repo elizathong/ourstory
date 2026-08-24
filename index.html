@@ -380,6 +380,8 @@ const TILE_SRC = {
 ,
   fr_stair_347: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAmUlEQVR4nGMMCsr6n5RkxaAoeIzh+vnrDMv2aTIsmaPFAAMxKdcYNDUFGZCBpaUmnM0CY1w/f50BF0DWgA5YsAm29j6Hs9Ftx2qAouAxhtp5CFvw2YjVgGXbBBk0ideDaoCmpiBJNmIYcP36e4br14+RbwChQCJogKHiD4oMYKJINzUMYDl/n4MyA7ycBCgyYDCEwbHzFBkAAECFIr3tiuA4AAAAAElFTkSuQmCC",
   fr_stair_348: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAP0lEQVR4nGPcsmXJfwYKABMlmkcNgACWefOOUWaApqYgZQYYKv6gyIBBEIjn73NQZoCXkwBFBgyGMDh2niIDAJzPC5wRhf6dAAAAAElFTkSuQmCC"
+,
+  phone: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhklEQVR4nGNgGGjAiC4gJCz1H8b+9esHAwMDAwMbGwdc/t3bZyh6WLCZysMrgNW2L58/YIhhNYCBgYFBzi8Hhf9o0xSs6nAaoGTlQJQBTLgMIBYMvAFYoxFfLKBHI14XaGjqMWho6qEL6yJzsMYCLL7PnDqEz3wGBgYsXkC3AQe4TISaoQIAWvMeOtsTGwUAAAAASUVORK5CYII="
 };
 const TILE_IMG = {};
 Object.keys(TILE_SRC).forEach(n=>{ const img = new Image(); img.src = TILE_SRC[n]; TILE_IMG[n] = img; });
@@ -620,7 +622,9 @@ const MAPS = {
       [1,0,0,1,1,1,0,0,0,0,0,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
-    defaultProps: [],
+    defaultProps: [
+      {x:7, y:4, wT:1, hT:1, img:'phone', walkable:false}
+    ],
     spawn: {x:4, y:7, facing:'up'},
     warps: [
       {x:4,y:7,dir:'down', to:'city', spawnX:3, spawnY:7, spawnFacing:'down'}
