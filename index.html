@@ -726,7 +726,8 @@ const NPCS = [
       "(He's still catching his breath from the last rally.)",
       "Hah — didn't expect an audience after service today.",
       "This is actually where he first noticed Liz, you know. She was right over there, absolutely destroying everyone at doubles.",
-      "He had no idea back then she'd end up being... well, everything."
+      "He had no idea back then she'd end up being... well, everything.",
+      "Think you could keep a rally going like that? Go on — head to the next court and take up the challenge yourself."
     ],
     memoryId: 'meet-badminton'
   },
@@ -1061,7 +1062,7 @@ const TREADMILL_DURATION = 15000;
 const BOXING_DURATION = 10000;
 const BOXING_PROMPT_WINDOW = 800; // ms to react to each prompt
 const PUNCH_ANIM_DURATION = 220; // ms for a fist to travel out and back
-const BADMINTON_DURATION = 10000;
+const BADMINTON_RALLY_GOAL = 10; // consecutive returns needed to win the rally
 const BADMINTON_SHUTTLE_MS = 1100; // time for the shuttle to cross from launch to its target
 const BADMINTON_HIT_RADIUS = 22;
 const BAD_MIN_X = 34, BAD_MAX_X = 148, BAD_MIN_Y = 150, BAD_MAX_Y = 215; // player's movable zone (left of the net)
@@ -1075,7 +1076,7 @@ function startMinigame(kind){
   } else if(kind==='boxing'){
     minigame = { kind, score:0, timeLeft:BOXING_DURATION, phase:'intro', doneAt:0, prompt:null, promptDeadline:0, feedback:null, feedbackUntil:0, lastPunchSide:null, lastPunchAt:0 };
   } else if(kind==='badminton'){
-    minigame = { kind, score:0, timeLeft:BADMINTON_DURATION, phase:'intro', doneAt:0,
+    minigame = { kind, rally:0, won:false, phase:'intro', doneAt:0,
       px:(BAD_MIN_X+BAD_MAX_X)/2, py:(BAD_MIN_Y+BAD_MAX_Y)/2,
       sx0:BAD_LAUNCH_X, sy0:BAD_LAUNCH_Y, sx1:0, sy1:0, shuttleX:BAD_LAUNCH_X, shuttleY:BAD_LAUNCH_Y,
       shuttleStart:0, resolved:false, feedback:null, feedbackUntil:0 };
@@ -1098,18 +1099,27 @@ function spawnShuttle(){
 }
 
 function badmintonSwing(){
-  const t = Math.min(1, (Date.now()-minigame.shuttleStart)/BADMINTON_SHUTTLE_MS);
+  if(minigame.resolved) return; // already returned (or missed) this shuttle — ignore extra taps
   const dx = minigame.px-minigame.shuttleX, dy = minigame.py-minigame.shuttleY;
   const dist = Math.hypot(dx, dy);
-  if(!minigame.resolved && t > 0.45 && dist < BADMINTON_HIT_RADIUS){
-    minigame.score += 1;
+  minigame.resolved = true;
+  if(dist < BADMINTON_HIT_RADIUS){
+    minigame.rally += 1;
     minigame.feedback = 'HIT!';
-    minigame.resolved = true;
-    spawnShuttle();
+    minigame.feedbackUntil = Date.now() + 300;
+    if(minigame.rally >= BADMINTON_RALLY_GOAL) endBadmintonRally(true);
+    else spawnShuttle();
   } else {
     minigame.feedback = 'MISS';
+    minigame.feedbackUntil = Date.now() + 600;
+    endBadmintonRally(false);
   }
-  minigame.feedbackUntil = Date.now() + 150;
+}
+
+function endBadmintonRally(won){
+  minigame.won = won;
+  minigame.phase = 'done';
+  minigame.doneAt = Date.now();
 }
 
 function boxingPunch(side){
@@ -1160,7 +1170,7 @@ function pressB(){
 function updateMinigame(dt){
   if(!minigame || minigame.phase!=='running') return;
   const f = dt/FRAME_MS;
-  minigame.timeLeft -= dt;
+  if(minigame.kind!=='badminton') minigame.timeLeft -= dt;
   if(minigame.kind==='treadmill'){
     minigame.speed = Math.max(0, minigame.speed - 0.045*f);
     minigame.distance += minigame.speed * 0.14 * f;
@@ -1178,12 +1188,13 @@ function updateMinigame(dt){
     minigame.shuttleX = minigame.sx0 + (minigame.sx1-minigame.sx0)*t;
     minigame.shuttleY = minigame.sy0 + (minigame.sy1-minigame.sy0)*t;
     if(t >= 1 && !minigame.resolved){
+      minigame.resolved = true;
       minigame.feedback = 'MISS';
-      minigame.feedbackUntil = Date.now() + 150;
-      spawnShuttle();
+      minigame.feedbackUntil = Date.now() + 600;
+      endBadmintonRally(false);
     }
   }
-  if(minigame.timeLeft <= 0){
+  if(minigame.kind!=='badminton' && minigame.timeLeft <= 0){
     minigame.timeLeft = 0;
     minigame.phase = 'done';
     minigame.doneAt = Date.now();
@@ -1454,12 +1465,12 @@ function drawBadmintonScene(ctx,W,H){
   const barW = 200, barX = W/2-barW/2, barY = 250;
   ctx.fillStyle = '#fff';
   ctx.font = '14px monospace';
-  ctx.fillText('SCORE: ' + minigame.score, W/2, barY-10);
+  ctx.fillText('RALLY: ' + minigame.rally + ' / ' + BADMINTON_RALLY_GOAL, W/2, barY-10);
   ctx.strokeStyle = '#fff'; ctx.strokeRect(barX, barY, barW, 10);
-  ctx.fillStyle = '#e05a5a';
-  ctx.fillRect(barX, barY, barW*(minigame.timeLeft/BADMINTON_DURATION), 10);
+  ctx.fillStyle = '#9be564';
+  ctx.fillRect(barX, barY, barW*(minigame.rally/BADMINTON_RALLY_GOAL), 10);
 
-  if(minigame.phase!=='running') return;
+  if(minigame.phase==='intro') return;
 
   // opponent, fixed on the right side of the net
   const odw = NATIVE*SCALE*0.9, odh = 32*SCALE*0.9;
@@ -1509,7 +1520,7 @@ function drawBadmintonScene(ctx,W,H){
   ctx.closePath();
   ctx.fill();
 
-  if(near){
+  if(near && minigame.phase==='running'){
     ctx.fillStyle = '#9be564';
     ctx.font = 'bold 12px monospace';
     ctx.fillText('A!', minigame.px, minigame.py-32);
@@ -1547,11 +1558,11 @@ function drawMinigameIntro(ctx,W,H){
   } else if(minigame.kind==='badminton'){
     ctx.fillText('BADMINTON', W/2, H/2-70);
     ctx.font = '13px monospace';
-    ctx.fillText('Use the arrows to move', W/2, H/2-30);
-    ctx.fillText('under the falling shuttle.', W/2, H/2-12);
-    ctx.fillText('Press A when it glows', W/2, H/2+14);
-    ctx.fillText('to return the rally!', W/2, H/2+32);
-    ctx.fillText('You have 10 seconds.', W/2, H/2+58);
+    ctx.fillText('Move with the arrows and', W/2, H/2-30);
+    ctx.fillText('press A when it glows to hit.', W/2, H/2-12);
+    ctx.fillText('The shuttle lands somewhere', W/2, H/2+14);
+    ctx.fillText('new each time — chase it down!', W/2, H/2+32);
+    ctx.fillText('Return it ' + BADMINTON_RALLY_GOAL + ' times to win the rally.', W/2, H/2+58);
   }
   ctx.fillStyle = '#9be564';
   ctx.font = 'bold 14px monospace';
@@ -1571,6 +1582,11 @@ function drawMinigameDone(ctx,W,H){
     ctx.fillText('NICE WORKOUT!', W/2, H/2-20);
     ctx.font = '14px monospace';
     ctx.fillText('You ran ' + Math.round(minigame.distance) + 'm', W/2, H/2+6);
+  } else if(minigame.kind==='badminton'){
+    ctx.fillText(minigame.won ? 'RALLY COMPLETE!' : 'RALLY OVER', W/2, H/2-20);
+    ctx.font = '14px monospace';
+    const times = minigame.rally===1 ? 'time' : 'times';
+    ctx.fillText('You returned it ' + minigame.rally + ' ' + times, W/2, H/2+6);
   } else {
     ctx.fillText('TIME!', W/2, H/2-20);
     ctx.font = '14px monospace';
