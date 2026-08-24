@@ -1206,8 +1206,9 @@ const BOXING_DURATION = 10000;
 const BOXING_PROMPT_WINDOW = 800; // ms to react to each prompt
 const PUNCH_ANIM_DURATION = 220; // ms for a fist to travel out and back
 const BADMINTON_RALLY_GOAL = 10; // consecutive returns needed to win the rally
-const BADMINTON_SHUTTLE_MS = 1100; // time for the shuttle to cross from launch to its target
-const BADMINTON_HIT_RADIUS = 22;
+const BADMINTON_SHUTTLE_MS = 1300; // time for the shuttle to cross from launch to its target
+const BADMINTON_RETURN_MS = 380; // time for a returned shuttle to travel back to the opponent
+const BADMINTON_HIT_RADIUS = 26;
 const BAD_MIN_X = 34, BAD_MAX_X = 148, BAD_MIN_Y = 150, BAD_MAX_Y = 215; // player's movable zone (left of the net)
 const BAD_LAUNCH_X = 258, BAD_LAUNCH_Y = 162; // where the shuttle launches from (opponent's racket)
 const BAD_OPPONENT_X = 262, BAD_OPPONENT_Y = 183; // opponent's fixed position on the right
@@ -1222,7 +1223,8 @@ function startMinigame(kind){
     minigame = { kind, rally:0, won:false, phase:'intro', doneAt:0,
       px:(BAD_MIN_X+BAD_MAX_X)/2, py:(BAD_MIN_Y+BAD_MAX_Y)/2,
       sx0:BAD_LAUNCH_X, sy0:BAD_LAUNCH_Y, sx1:0, sy1:0, shuttleX:BAD_LAUNCH_X, shuttleY:BAD_LAUNCH_Y,
-      shuttleStart:0, resolved:false, feedback:null, feedbackUntil:0 };
+      shuttleStart:0, resolved:false, feedback:null, feedbackUntil:0,
+      stage:'incoming', returnStart:0, rx0:0, ry0:0 };
   }
   minigameActive = true;
 }
@@ -1239,23 +1241,32 @@ function spawnShuttle(){
   minigame.sy1 = BAD_MIN_Y + Math.random()*(BAD_MAX_Y-BAD_MIN_Y);
   minigame.shuttleStart = Date.now();
   minigame.resolved = false;
+  minigame.stage = 'incoming';
 }
 
 function badmintonSwing(){
-  if(minigame.resolved) return; // already returned (or missed) this shuttle — ignore extra taps
+  // only an incoming shuttle can be swung at — ignore taps during the return-flight animation
+  if(minigame.stage !== 'incoming' || minigame.resolved) return;
   const dx = minigame.px-minigame.shuttleX, dy = minigame.py-minigame.shuttleY;
   const dist = Math.hypot(dx, dy);
-  minigame.resolved = true;
   if(dist < BADMINTON_HIT_RADIUS){
+    minigame.resolved = true;
     minigame.rally += 1;
     minigame.feedback = 'HIT!';
     minigame.feedbackUntil = Date.now() + 300;
-    if(minigame.rally >= BADMINTON_RALLY_GOAL) endBadmintonRally(true);
-    else spawnShuttle();
+    if(minigame.rally >= BADMINTON_RALLY_GOAL){
+      endBadmintonRally(true);
+    } else {
+      // send it back toward the opponent — a real exchange, not just a reset
+      minigame.stage = 'returning';
+      minigame.returnStart = Date.now();
+      minigame.rx0 = minigame.shuttleX;
+      minigame.ry0 = minigame.shuttleY;
+    }
   } else {
-    minigame.feedback = 'MISS';
-    minigame.feedbackUntil = Date.now() + 600;
-    endBadmintonRally(false);
+    // out of position — a harmless whiff, not a rally-ending miss. Keep chasing it.
+    minigame.feedback = 'MISS SWING';
+    minigame.feedbackUntil = Date.now() + 250;
   }
 }
 
@@ -1327,14 +1338,21 @@ function updateMinigame(dt){
     if(keysDown['ArrowUp']) minigame.py = Math.max(BAD_MIN_Y, minigame.py - spd);
     if(keysDown['ArrowDown']) minigame.py = Math.min(BAD_MAX_Y, minigame.py + spd);
 
-    const t = Math.min(1, (Date.now()-minigame.shuttleStart)/BADMINTON_SHUTTLE_MS);
-    minigame.shuttleX = minigame.sx0 + (minigame.sx1-minigame.sx0)*t;
-    minigame.shuttleY = minigame.sy0 + (minigame.sy1-minigame.sy0)*t;
-    if(t >= 1 && !minigame.resolved){
-      minigame.resolved = true;
-      minigame.feedback = 'MISS';
-      minigame.feedbackUntil = Date.now() + 600;
-      endBadmintonRally(false);
+    if(minigame.stage === 'incoming'){
+      const t = Math.min(1, (Date.now()-minigame.shuttleStart)/BADMINTON_SHUTTLE_MS);
+      minigame.shuttleX = minigame.sx0 + (minigame.sx1-minigame.sx0)*t;
+      minigame.shuttleY = minigame.sy0 + (minigame.sy1-minigame.sy0)*t;
+      if(t >= 1 && !minigame.resolved){
+        minigame.resolved = true;
+        minigame.feedback = 'MISS';
+        minigame.feedbackUntil = Date.now() + 600;
+        endBadmintonRally(false);
+      }
+    } else if(minigame.stage === 'returning'){
+      const t2 = Math.min(1, (Date.now()-minigame.returnStart)/BADMINTON_RETURN_MS);
+      minigame.shuttleX = minigame.rx0 + (BAD_OPPONENT_X-minigame.rx0)*t2;
+      minigame.shuttleY = minigame.ry0 + (BAD_OPPONENT_Y-minigame.ry0)*t2;
+      if(t2 >= 1) spawnShuttle(); // the opponent returns it — a fresh incoming volley
     }
   }
   if(minigame.kind!=='badminton' && minigame.timeLeft <= 0){
@@ -1703,8 +1721,8 @@ function drawMinigameIntro(ctx,W,H){
     ctx.font = '13px monospace';
     ctx.fillText('Move with the arrows and', W/2, H/2-30);
     ctx.fillText('press A when it glows to hit.', W/2, H/2-12);
-    ctx.fillText('The shuttle lands somewhere', W/2, H/2+14);
-    ctx.fillText('new each time — chase it down!', W/2, H/2+32);
+    ctx.fillText('Swinging early or out of position', W/2, H/2+14);
+    ctx.fillText('just whiffs — only dropping it ends the rally.', W/2, H/2+32);
     ctx.fillText('Return it ' + BADMINTON_RALLY_GOAL + ' times to win the rally.', W/2, H/2+58);
   }
   ctx.fillStyle = '#9be564';
