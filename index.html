@@ -994,7 +994,12 @@ const MEMENTOS = [
     ],
     img: KA_TEXT_SRC,
     caption: "The first messages he ever sent her — asking her to badminton, then dinner after.",
-    memoryId: 'first-text'
+    memoryId: 'first-text',
+    afterPhoto: [
+      "And after all that texting back and forth, we finally went out properly.",
+      "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of us just talking for hours over it.",
+      "Best first date food either of us could've asked for. Go on — go find your way to the restaurant, I promise it's worth it."
+    ]
   }
 ];
 
@@ -1934,10 +1939,14 @@ function openPhotoViewer(memento){
 }
 
 function closePhotoViewer(){
-  if(activePhoto && activePhoto.memoryId) unlockMemory(activePhoto.memoryId);
+  const memento = activePhoto;
+  if(memento && memento.memoryId) unlockMemory(memento.memoryId);
   photoViewerActive = false;
   activePhoto = null;
   photoViewerEl().style.display = 'none';
+  if(memento && memento.afterPhoto && memento.afterPhoto.length){
+    openDialogue({ name: memento.speaker || HIM_NAME, dialogue: memento.afterPhoto });
+  }
 }
 
 function openDialogue(npc){
