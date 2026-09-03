@@ -105,12 +105,12 @@
   }
   #photoViewer{
     display:none; align-items:center; justify-content:center;
-    position:absolute; inset:0; border-radius:12px;
-    background:rgba(20,14,30,.9); padding:20px; text-align:center;
+    position:fixed; inset:0; z-index:55;
+    background:rgba(10,8,14,.92); padding:24px; text-align:center;
   }
   #photoViewer .card{
     background:rgba(255,255,255,.06); border:2px solid #ffd166;
-    border-radius:14px; padding:14px; max-width:260px; max-height:100%;
+    border-radius:14px; padding:16px; max-width:min(92vw, 440px); max-height:88vh;
     display:flex; flex-direction:column; box-sizing:border-box;
   }
   #photoViewer img{
@@ -118,10 +118,10 @@
     border-radius:8px; box-shadow:0 4px 0 rgba(0,0,0,.35); margin-bottom:8px;
   }
   #photoViewer #photoViewerCaption{
-    flex:0 0 auto; color:var(--cream); font-size:11px; line-height:1.35; margin:0 0 6px;
+    flex:0 0 auto; color:var(--cream); font-size:13px; line-height:1.4; margin:0 0 8px;
   }
   #photoViewer .hint{
-    flex:0 0 auto; color:#ffd166; font-size:10px; letter-spacing:.5px; margin:0; opacity:.85;
+    flex:0 0 auto; color:#ffd166; font-size:11px; letter-spacing:.5px; margin:0; opacity:.85;
   }
   #challengeDialog.show .card{ animation:challengeCardIn .35s ease; }
   @keyframes challengeOverlayFade{ from{ opacity:0; } to{ opacity:1; } }
@@ -965,9 +965,19 @@ const MINIGAME_SPOTS = [
     tiles: [[16,9],[16,8],[16,10],[15,9],[17,9]],
     hintX: 16.5, hintY: 8.3,
     kind: 'badminton',
-    requiresMemory: 'meet-badminton'
+    requiresMemory: 'meet-badminton',
+    solved: false
   }
 ];
+
+const BADMINTON_WIN_NPC = {
+  name: 'Kay Aun',
+  dialogue: [
+    "Ha — that was actually really fun to watch.",
+    "You know, there's more of this story sitting at my place, if you want to see it.",
+    "Head over to my house — I think you'll want to see what's on my phone."
+  ]
+};
 
 /* ---------- Mementos (objects you can inspect for a photo + memory) ---------- */
 const MEMENTOS = [
@@ -976,6 +986,12 @@ const MEMENTOS = [
     map: 'kahouse',
     tiles: [[7,4]],
     hintX: 7.5, hintY: 3.6,
+    speaker: 'Kay Aun',
+    dialogue: [
+      "This is the phone I used to text her on, back when none of this was \"official\" yet.",
+      "I got her number through the badminton group chat... didn't think a random text would lead to all this.",
+      "Go on, take a look."
+    ],
     img: KA_TEXT_SRC,
     caption: "The first messages he ever sent her — asking her to badminton, then dinner after.",
     memoryId: 'first-text'
@@ -1197,7 +1213,7 @@ function draw(){
   CHALLENGES.filter(c=>c.map===currentMapId && !c.solved).forEach(c=>{
     drawHintMarker(gctx, c.hintX*TILE, c.hintY*TILE, '#ff6f91');
   });
-  MINIGAME_SPOTS.filter(s=>s.map===currentMapId && spotUnlocked(s)).forEach(s=>{
+  MINIGAME_SPOTS.filter(s=>s.map===currentMapId && spotUnlocked(s) && !s.solved).forEach(s=>{
     drawHintMarker(gctx, s.hintX*TILE, s.hintY*TILE, '#9be564');
   });
   MEMENTOS.filter(m=>m.map===currentMapId).forEach(m=>{
@@ -1279,13 +1295,13 @@ const BAD_LAUNCH_X = 258, BAD_LAUNCH_Y = 162; // where the shuttle launches from
 const BAD_OPPONENT_X = 262, BAD_OPPONENT_Y = 183; // opponent's fixed position on the right
 const BADMINTON_PLAYER_SPEED = 3.2;
 
-function startMinigame(kind){
+function startMinigame(kind, spotId){
   if(kind==='treadmill'){
     minigame = { kind, speed:0, distance:0, timeLeft:TREADMILL_DURATION, beltOffset:0, phase:'intro', doneAt:0 };
   } else if(kind==='boxing'){
     minigame = { kind, score:0, timeLeft:BOXING_DURATION, phase:'intro', doneAt:0, prompt:null, promptDeadline:0, feedback:null, feedbackUntil:0, lastPunchSide:null, lastPunchAt:0 };
   } else if(kind==='badminton'){
-    minigame = { kind, rally:0, won:false, phase:'intro', doneAt:0,
+    minigame = { kind, spotId, rally:0, won:false, phase:'intro', doneAt:0,
       px:(BAD_MIN_X+BAD_MAX_X)/2, py:(BAD_MIN_Y+BAD_MAX_Y)/2,
       sx0:BAD_LAUNCH_X, sy0:BAD_LAUNCH_Y, sx1:0, sy1:0, shuttleX:BAD_LAUNCH_X, shuttleY:BAD_LAUNCH_Y,
       shuttleStart:0, resolved:false, feedback:null, feedbackUntil:0,
@@ -1370,7 +1386,14 @@ function pressA(){
     else if(minigame.kind==='badminton') badmintonSwing();
   } else if(minigame.phase==='done'){
     if(Date.now() - minigame.doneAt < MINIGAME_RESULT_GRACE) return;
-    startTransition(()=>{ minigameActive = false; minigame = null; });
+    const won = minigame.kind==='badminton' && minigame.won;
+    const spot = minigame.spotId ? MINIGAME_SPOTS.find(s=>s.id===minigame.spotId) : null;
+    const firstWin = won && spot && !spot.solved;
+    if(spot && won) spot.solved = true;
+    startTransition(()=>{
+      minigameActive = false; minigame = null;
+      if(firstWin) openDialogue(BADMINTON_WIN_NPC);
+    });
   }
 }
 
@@ -1859,9 +1882,9 @@ function tryInteract(){
   const challenge = challengeAt(t.x, t.y);
   if(challenge){ openChallenge(challenge); return true; }
   const spot = minigameSpotAt(t.x, t.y);
-  if(spot){ startTransition(()=>startMinigame(spot.kind)); return true; }
+  if(spot){ startTransition(()=>startMinigame(spot.kind, spot.id)); return true; }
   const memento = mementoAt(t.x, t.y);
-  if(memento){ openPhotoViewer(memento); return true; }
+  if(memento){ openMemento(memento); return true; }
   const npc = npcAt(t.x, t.y);
   if(!npc) return false;
   openDialogue(npc);
@@ -1874,6 +1897,33 @@ let activePhoto = null;
 const photoViewerEl = ()=>document.getElementById('photoViewer');
 const photoViewerImgEl = ()=>document.getElementById('photoViewerImg');
 const photoViewerCaptionEl = ()=>document.getElementById('photoViewerCaption');
+
+let audioCtx = null;
+function playNotifySound(){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const notes = [ {freq:1180, start:0, dur:0.09}, {freq:1480, start:0.1, dur:0.16} ];
+    notes.forEach(n=>{
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = n.freq;
+      gain.gain.setValueAtTime(0.0001, now+n.start);
+      gain.gain.exponentialRampToValueAtTime(0.22, now+n.start+0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now+n.start+n.dur);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now+n.start);
+      osc.stop(now+n.start+n.dur+0.02);
+    });
+  }catch(e){ /* Web Audio unavailable — fail silently */ }
+}
+
+function openMemento(memento){
+  playNotifySound();
+  openDialogue({ name: memento.speaker || HIM_NAME, dialogue: memento.dialogue, followupMemento: memento });
+}
 
 function openPhotoViewer(memento){
   photoViewerActive = true;
@@ -1915,6 +1965,7 @@ function advanceDialogue(){
 function closeDialogue(){
   if(activeNPC && activeNPC.memoryId) unlockMemory(activeNPC.memoryId);
   const followupId = activeNPC && activeNPC.followupChallenge;
+  const followupMemento = activeNPC && activeNPC.followupMemento;
   dialogueActive = false;
   activeNPC = null;
   dialogueLineIdx = 0;
@@ -1927,6 +1978,15 @@ function closeDialogue(){
       dialogBoxEl().classList.remove('fadeOut');
       followupPending = false;
       openChallenge(ch);
+    }, 550);
+    return;
+  }
+  if(followupMemento){
+    dialogBoxEl().classList.add('fadeOut');
+    setTimeout(()=>{
+      dialogBoxEl().style.display = 'none';
+      dialogBoxEl().classList.remove('fadeOut');
+      openPhotoViewer(followupMemento);
     }, 550);
     return;
   }
