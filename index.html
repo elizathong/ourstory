@@ -273,7 +273,7 @@
         <div class="card">
           <img id="photoViewerImg" alt="">
           <p id="photoViewerCaption"></p>
-          <p class="hint">press A to continue</p>
+          <p class="hint">tap anywhere to close</p>
         </div>
       </div>
     </div>
@@ -2157,6 +2157,7 @@ function startGame(){
   bindHold(document.getElementById('abtn-a'), ()=>{ pressA(); }, ()=>{});
   bindHold(document.getElementById('abtn-b'), ()=>{ if(minigameActive) pressB(); }, ()=>{});
   document.getElementById('dialogBox').addEventListener('click', advanceDialogue);
+  document.getElementById('photoViewer').addEventListener('click', closePhotoViewer);
   document.getElementById('journalBtn').addEventListener('click', openJournal);
   document.getElementById('journalCloseBtn').addEventListener('click', closeJournal);
   initEditor();
