@@ -991,6 +991,8 @@ const NPCS = [
     x: 16, y: 10,
     facing: 'right',
     sprite: 'Max',
+    bounce: true,
+    scale: 1.3,
     name: 'Kay Aun',
     dialogue: [
       "Man, this bulgogi is unreal.",
@@ -1004,6 +1006,8 @@ const NPCS = [
     x: 16, y: 13,
     facing: 'right',
     sprite: 'Zara',
+    bounce: true,
+    scale: 1.3,
     name: 'Liz',
     dialogue: [
       "Ugh, don't remind him about the banchan — he ordered way too much haha.",
@@ -1248,9 +1252,11 @@ function drawNPC(ctx, npc){
   const img = IDLE_DATA_IMG[npc.sprite];
   if(!img || !img.complete) return;
   const dirIdx = DIR_COL[npc.facing];
-  const pscale = (MAPS[currentMapId].playerScale || 1);
-  const dw = NATIVE*SCALE*pscale, dh = 32*SCALE*pscale;
-  const px = npc.x*TILE - (dw-TILE)/2, py = npc.y*TILE - (dh-TILE);
+  const scale = (MAPS[currentMapId].playerScale || 1) * (npc.scale || 1);
+  const dw = NATIVE*SCALE*scale, dh = 32*SCALE*scale;
+  const px = npc.x*TILE - (dw-TILE)/2;
+  let py = npc.y*TILE - (dh-TILE);
+  if(npc.bounce) py += Math.sin(Date.now()/280)*3;
   ctx.imageSmoothingEnabled = false;
   const sx = dirIdx*NATIVE;
   ctx.drawImage(img, sx,0,NATIVE,32, px,py,dw,dh);
