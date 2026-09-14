@@ -1256,7 +1256,7 @@ function drawNPC(ctx, npc){
   const dw = NATIVE*SCALE*scale, dh = 32*SCALE*scale;
   const px = npc.x*TILE - (dw-TILE)/2;
   let py = npc.y*TILE - (dh-TILE);
-  if(npc.bounce) py += Math.sin(Date.now()/280)*3;
+  if(npc.bounce) py += Math.sin(Date.now()/190)*3;
   ctx.imageSmoothingEnabled = false;
   const sx = dirIdx*NATIVE;
   ctx.drawImage(img, sx,0,NATIVE,32, px,py,dw,dh);
