@@ -1248,7 +1248,8 @@ function drawNPC(ctx, npc){
   const img = IDLE_DATA_IMG[npc.sprite];
   if(!img || !img.complete) return;
   const dirIdx = DIR_COL[npc.facing];
-  const dw = NATIVE*SCALE, dh = 32*SCALE;
+  const pscale = (MAPS[currentMapId].playerScale || 1);
+  const dw = NATIVE*SCALE*pscale, dh = 32*SCALE*pscale;
   const px = npc.x*TILE - (dw-TILE)/2, py = npc.y*TILE - (dh-TILE);
   ctx.imageSmoothingEnabled = false;
   const sx = dirIdx*NATIVE;
