@@ -960,8 +960,8 @@ const NPCS = [
     sprite: 'Bob',        // reuses one of the existing character portraits as a placeholder
     name: 'Bob',
     dialogue: [
-      "Oh — hello there! I've been waiting for someone to wander by.",
-      "I'm the narrator of this little story — think of me as your guide through Liz and Kay Aun's story.",
+      "Oh — hello there! I've been waiting for someone to wander by. Alone. In this field. For a while.",
+      "I'm the narrator of this little story — think of me as your guide, minus the name, the backstory, or the health insurance.",
       "There are moments scattered all over this world, waiting to be found. Let's start with one of the very first.",
       "Before he was hers, she had to notice him first. Do you know where that happened?"
     ],
@@ -976,9 +976,9 @@ const NPCS = [
     name: 'Kay Aun',
     dialogue: [
       "(He's still catching his breath from the last rally.)",
-      "Hah — didn't expect an audience after service today.",
+      "Hah — didn't expect an audience after service today. Try not to judge the footwork.",
       "This is actually where he first noticed Liz, you know. She was right over there, absolutely destroying everyone at doubles.",
-      "He had no idea back then she'd end up being... well, everything.",
+      "He had no idea back then she'd end up being... well, everything. Also he definitely lost that match because he couldn't stop staring.",
       "Think you could keep a rally going like that? Go on — head to the next court and take up the challenge yourself."
     ],
     memoryId: 'meet-badminton'
@@ -992,8 +992,8 @@ const NPCS = [
     name: 'Liz',
     dialogue: [
       "Church always ran long, so a few of them started playing badminton after service to unwind.",
-      "That's actually how she and Kay Aun first crossed paths — he kept losing on purpose just to keep playing another round, she thinks.",
-      "Funny how a silly little court ended up mattering so much."
+      "That's actually how she and Kay Aun first crossed paths — he kept losing on purpose just to keep playing another round, she thinks. Subtle, right?",
+      "Funny how a silly little court ended up mattering so much. He still owes her a rematch he keeps mysteriously avoiding."
     ]
   },
   {
@@ -1007,8 +1007,8 @@ const NPCS = [
     name: 'Kay Aun',
     dialogue: [
       "Man, this bulgogi is unreal.",
-      "This was actually where I asked her out officially, you know — right at this table.",
-      "Best decision I ever made, ordering way too much banchan that night."
+      "This was actually where I asked her out officially, you know — right at this table. Rehearsed the whole speech in the bathroom beforehand, if I'm honest.",
+      "Best decision I ever made, ordering way too much banchan that night. Okay, minor regrets about the bill."
     ]
   },
   {
@@ -1021,9 +1021,9 @@ const NPCS = [
     scale: 1.1,
     name: 'Liz',
     dialogue: [
-      "Ugh, don't remind him about the banchan — he ordered way too much haha.",
+      "Ugh, don't remind him about the banchan — he ordered way too much haha. Eleven side dishes. For two people.",
       "But yeah... this table's kind of special to us. First real date, first conversation that just didn't stop.",
-      "Come back and visit anytime — the kimchi's always good here."
+      "Come back and visit anytime — the kimchi's always good here. Kay Aun's ordering habits, less so."
     ]
   }
   // Add more NPC objects here — one per conversation/moment.
@@ -1042,8 +1042,8 @@ const CHALLENGES = [
     question: 'First challenge: who created this game?',
     options: ['Liz', 'Kay Aun'],
     correct: 'Liz',
-    successText: "That's right — Liz made this whole thing, just for you. ♥",
-    failText: "Not quite... give it another guess!",
+    successText: "That's right — Liz made this whole thing, just for you. Yes, including the bugs. ♥",
+    failText: "Not quite... give it another guess! (Hint: it definitely wasn't Kay Aun. He can barely work the TV remote.)",
     solved: false
   },
   {
@@ -1053,8 +1053,8 @@ const CHALLENGES = [
     question: 'Where did Liz first notice him?',
     options: ['Church badminton court', 'The Pokémon Center'],
     correct: 'Church badminton court',
-    successText: "That's it! Go find the badminton court in Celadon City — there's a rally worth watching.",
-    failText: "Hmm, not quite. Think about where the two of them used to unwind after church.",
+    successText: "That's it! Go find the badminton court in Celadon City — there's a rally worth watching (and possibly some suspicious flirting).",
+    failText: "Hmm, not quite. Think about where the two of them used to unwind after church. Hint: it involves a net and questionable athletic ability.",
     solved: false
   }
 ];
@@ -1078,9 +1078,9 @@ const MINIGAME_SPOTS = [
 const BADMINTON_WIN_NPC = {
   name: 'Kay Aun',
   dialogue: [
-    "Ha — that was actually really fun to watch.",
+    "Ha — that was actually really fun to watch. Better form than my first-date self, honestly.",
     "You know, there's more of this story sitting at my place, if you want to see it.",
-    "Head over to my house — I think you'll want to see what's on my phone."
+    "Head over to my house — I think you'll want to see what's on my phone. Don't judge the meme folder."
   ]
 };
 
@@ -1094,7 +1094,7 @@ const MEMENTOS = [
     speaker: 'Kay Aun',
     dialogue: [
       "This is the phone I used to text her on, back when none of this was \"official\" yet.",
-      "I got her number through the badminton group chat... didn't think a random text would lead to all this.",
+      "I got her number through the badminton group chat... didn't think a random text would lead to all this. Best group chat spam I've ever caused.",
       "Go on, take a look."
     ],
     img: KA_TEXT_SRC,
@@ -1103,7 +1103,7 @@ const MEMENTOS = [
     afterPhoto: [
       "And after all that texting back and forth, we finally went out properly.",
       "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of us just talking for hours over it.",
-      "Best first date food either of us could've asked for. Go on — go find your way to the restaurant, I promise it's worth it."
+      "Best first date food either of us could've asked for. Go on — go find your way to the restaurant, I promise it's worth it. Bring napkins."
     ]
   },
   {
@@ -1114,7 +1114,7 @@ const MEMENTOS = [
     speaker: 'Kay Aun',
     dialogue: [
       "Oh, you found our \"photo\" from that night. Full disclosure...",
-      "...neither of us actually thought to take a picture mid-meal, so this one's AI-generated after the fact. Not gonna lie though, it's a pretty good likeness.",
+      "...neither of us actually thought to take a picture mid-meal, so this one's AI-generated after the fact. Not gonna lie though, it's a pretty good likeness. My jawline's never looked better, frankly.",
       "Close enough to the real thing, right? Take a look."
     ],
     img: SAEMAEUL_PHOTO_SRC,
