@@ -138,6 +138,11 @@
   #challengeFeedback{ margin-top:14px; font-size:12.5px; min-height:16px; }
   #challengeFeedback.correct{ color:#9be564; }
   #challengeFeedback.wrong{ color:#e05a5a; }
+  #challengeAdvance{
+    display:none; margin-top:6px; font-size:13px; color:#9be564;
+    animation:dialogBlink 1s infinite;
+  }
+  #challengeAdvance.show{ display:block; }
 
   #controlRow{
     display:flex; align-items:center; justify-content:space-between;
@@ -267,6 +272,7 @@
           <p id="challengeQuestion"></p>
           <div id="challengeOptions"></div>
           <p id="challengeFeedback"></p>
+          <div id="challengeAdvance">&#9660; tap or press A to continue</div>
         </div>
       </div>
       <div id="photoViewer">
@@ -968,33 +974,20 @@ const NPCS = [
     followupChallenge: 'where-did-liz-notice-him'
   },
   {
-    id: 'badminton-kayaun',
+    id: 'badminton-umpire',
     map: 'badminton',
-    x: 6, y: 4,
-    facing: 'down',
-    sprite: 'Max',
-    name: 'Kay Aun',
+    x: 9, y: 6,
+    facing: 'left',
+    sprite: 'Bob',
+    name: 'Bob',
     dialogue: [
-      "(He's still catching his breath from the last rally.)",
-      "Hah — didn't expect an audience after service today. Try not to judge the footwork.",
-      "This is actually where he first noticed Liz, you know. She was right over there, absolutely destroying everyone at doubles.",
+      "Church always ran long, so a few of them started playing badminton after service to unwind.",
+      "This is actually where he first noticed her, you know — right over there, absolutely destroying everyone at doubles.",
       "He had no idea back then she'd end up being... well, everything. Also he definitely lost that match because he couldn't stop staring.",
+      "Funny thing is, she thinks he kept losing on purpose just to keep playing another round. Subtle, right?",
       "Think you could keep a rally going like that? Go on — head to the next court and take up the challenge yourself."
     ],
     memoryId: 'meet-badminton'
-  },
-  {
-    id: 'badminton-liz',
-    map: 'badminton',
-    x: 6, y: 8,
-    facing: 'up',
-    sprite: 'Zara',
-    name: 'Liz',
-    dialogue: [
-      "Church always ran long, so a few of them started playing badminton after service to unwind.",
-      "That's actually how she and Kay Aun first crossed paths — he kept losing on purpose just to keep playing another round, she thinks. Subtle, right?",
-      "Funny how a silly little court ended up mattering so much. He still owes her a rematch he keeps mysteriously avoiding."
-    ]
   },
   {
     id: 'restaurant-kayaun',
@@ -1503,7 +1496,7 @@ function boxingPunch(side){
 function pressA(){
   if(introDialogueActive){ closeWelcomeDialog(); return; }
   if(photoViewerActive){ closePhotoViewer(); return; }
-  if(challengeActive) return;
+  if(challengeActive){ if(challengeAwaitingClose) closeChallenge(); return; }
   if(dialogueActive){ advanceDialogue(); return; }
   if(!minigame){ tryInteract(); return; }
   if(minigame.phase==='intro'){
@@ -2130,17 +2123,21 @@ function closeDialogue(){
 /* ---------- Challenges ---------- */
 let challengeActive = false;
 let activeChallenge = null;
+let challengeAwaitingClose = false;
 const challengeDialogEl = ()=>document.getElementById('challengeDialog');
 const challengeQuestionEl = ()=>document.getElementById('challengeQuestion');
 const challengeOptionsEl = ()=>document.getElementById('challengeOptions');
 const challengeFeedbackEl = ()=>document.getElementById('challengeFeedback');
+const challengeAdvanceEl = ()=>document.getElementById('challengeAdvance');
 
 function openChallenge(ch){
   challengeActive = true;
   activeChallenge = ch;
+  challengeAwaitingClose = false;
   challengeQuestionEl().textContent = ch.question;
   challengeFeedbackEl().textContent = '';
   challengeFeedbackEl().className = '';
+  challengeAdvanceEl().classList.remove('show');
   challengeOptionsEl().innerHTML = '';
   ch.options.forEach(opt=>{
     const btn = document.createElement('button');
@@ -2158,7 +2155,8 @@ function answerChallenge(choice){
     challengeFeedbackEl().textContent = activeChallenge.successText;
     challengeFeedbackEl().className = 'correct';
     Array.from(challengeOptionsEl().children).forEach(btn=>btn.disabled = true);
-    setTimeout(closeChallenge, 1600);
+    challengeAwaitingClose = true;
+    challengeAdvanceEl().classList.add('show');
   } else {
     challengeFeedbackEl().textContent = activeChallenge.failText;
     challengeFeedbackEl().className = 'wrong';
@@ -2169,6 +2167,8 @@ function closeChallenge(){
   challengeDialogEl().classList.remove('show');
   challengeActive = false;
   activeChallenge = null;
+  challengeAwaitingClose = false;
+  challengeAdvanceEl().classList.remove('show');
 }
 
 /* ---------- Memories ---------- */
@@ -2291,6 +2291,10 @@ function startGame(){
   bindHold(document.getElementById('abtn-a'), ()=>{ pressA(); }, ()=>{});
   bindHold(document.getElementById('abtn-b'), ()=>{ if(minigameActive) pressB(); }, ()=>{});
   document.getElementById('dialogBox').addEventListener('click', advanceDialogue);
+  document.getElementById('challengeDialog').addEventListener('click', e=>{
+    if(e.target.closest('#challengeOptions')) return;
+    if(challengeAwaitingClose) closeChallenge();
+  });
   document.getElementById('photoViewer').addEventListener('click', closePhotoViewer);
   document.getElementById('journalBtn').addEventListener('click', openJournal);
   document.getElementById('journalCloseBtn').addEventListener('click', closeJournal);
