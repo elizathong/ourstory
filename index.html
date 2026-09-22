@@ -1075,6 +1075,18 @@ const CHALLENGES = [
     successText: "That's it! Go find the badminton court in Celadon City — there's a rally worth watching (and possibly some suspicious flirting).",
     failText: "Hmm, not quite. Think about where the two of them used to unwind after church. Hint: it involves a net and questionable athletic ability.",
     solved: false
+  },
+  {
+    id: 'first-date-quiz',
+    map: null, // triggered after closing the kahouse phone photo, not a map location
+    tiles: [],
+    question: 'Where was our first date?',
+    options: ['STREAT Thai', 'Sae Ma Eul', 'Menya Shishido', 'We actually just walked around Jaya One'],
+    correct: 'Sae Ma Eul',
+    successText: "That's the one — Sae Ma Eul. Go on, see how it went.",
+    failText: "Nope, not that one. Think Korean BBQ, way too much banchan, and zero regrets (except maybe the bill).",
+    solved: false,
+    revealsAfterPhotoFor: 'kahouse-phone'
   }
 ];
 
@@ -1119,6 +1131,7 @@ const MEMENTOS = [
     img: KA_TEXT_SRC,
     caption: "The first messages he ever sent her — asking her to badminton, then dinner after.",
     memoryId: 'first-text',
+    afterPhotoChallenge: 'first-date-quiz',
     afterPhoto: [
       "And after all that texting back and forth, we finally went out properly.",
       "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of us just talking for hours over it.",
@@ -2088,6 +2101,10 @@ function closePhotoViewer(){
   photoViewerActive = false;
   activePhoto = null;
   photoViewerEl().style.display = 'none';
+  if(memento && memento.afterPhotoChallenge){
+    const ch = CHALLENGES.find(c=>c.id===memento.afterPhotoChallenge);
+    if(ch && !ch.solved){ openChallenge(ch); return; }
+  }
   if(memento && memento.afterPhoto && memento.afterPhoto.length){
     openDialogue({ name: memento.speaker || HIM_NAME, dialogue: memento.afterPhoto });
   }
@@ -2190,11 +2207,18 @@ function answerChallenge(choice){
 }
 
 function closeChallenge(){
+  const ch = activeChallenge;
   challengeDialogEl().classList.remove('show');
   challengeActive = false;
   activeChallenge = null;
   challengeAwaitingClose = false;
   challengeAdvanceEl().classList.remove('show');
+  if(ch && ch.solved && ch.revealsAfterPhotoFor){
+    const mem = MEMENTOS.find(m=>m.id===ch.revealsAfterPhotoFor);
+    if(mem && mem.afterPhoto && mem.afterPhoto.length){
+      openDialogue({ name: mem.speaker || HIM_NAME, dialogue: mem.afterPhoto });
+    }
+  }
 }
 
 /* ---------- Memories ---------- */
