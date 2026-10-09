@@ -1070,7 +1070,13 @@ const CHALLENGES = [
     correct: 'Liz',
     successText: "That's right — Liz made this whole thing, just for you. Yes, including the bugs. ♥",
     failText: "Not quite... give it another guess! (Hint: it definitely wasn't Kay Aun. He can barely work the TV remote.)",
-    solved: false
+    solved: false,
+    followupDialogue: [
+      "Nice guess — Liz really did build this whole thing, start to finish.",
+      "I'm Bob, by the way. I'll be narrating a lot of this — you'll bump into me properly once you're out and about.",
+      "Quick tip: keep an eye on that compass bar up top. 🧭 It'll always tell you what to do next, so you're never wandering around clueless.",
+      "Go on — head out of your room and let's get this started."
+    ]
   },
   {
     id: 'where-did-liz-notice-him',
@@ -2224,7 +2230,11 @@ function closeChallenge(){
     const mem = MEMENTOS.find(m=>m.id===ch.revealsAfterPhotoFor);
     if(mem && mem.afterPhoto && mem.afterPhoto.length){
       openDialogue({ name: mem.speaker || HIM_NAME, dialogue: mem.afterPhoto });
+      return;
     }
+  }
+  if(ch && ch.solved && ch.followupDialogue && ch.followupDialogue.length){
+    openDialogue({ name: 'Bob', dialogue: ch.followupDialogue });
   }
 }
 
