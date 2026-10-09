@@ -60,7 +60,13 @@
 
   /* ---------- Room / game ---------- */
   #gameScreen{ display:none; flex-direction:column; align-items:center; margin:0 -16px; }
-  #roomLabel{ font-size:14px; opacity:.75; margin-bottom:10px; text-align:center; letter-spacing:1px; }
+  #roomLabel{ font-size:14px; opacity:.75; margin-bottom:6px; text-align:center; letter-spacing:1px; }
+  #objectiveBanner{
+    width:min(352px, calc(100vw - 8px)); margin:0 0 10px; box-sizing:border-box;
+    background:rgba(255,111,145,.12); border:1px solid rgba(255,111,145,.35);
+    border-radius:10px; padding:7px 12px; font-size:12px; line-height:1.35;
+    color:var(--cream); text-align:center;
+  }
   #canvasWrap{ display:grid; position:relative; width:min(352px, calc(100vw - 8px)); }
   #canvasWrap > *{ grid-area:1 / 1; }
   #gameCanvas{
@@ -251,6 +257,7 @@
   <button id="confirmBtn">Start</button>
   <div id="gameScreen">
     <div id="roomLabel"></div>
+    <div id="objectiveBanner"></div>
     <div id="canvasWrap">
       <canvas id="gameCanvas" width="352" height="320"></canvas>
       <div id="fadeOverlay"></div>
@@ -2237,6 +2244,38 @@ function showMemoryToast(mem){
   showMemoryToast._t = setTimeout(()=>{ el.style.display = 'none'; }, 2200);
 }
 
+/* ---------- Objective banner (always-visible "what to do next") ----------
+   Walks through the story's milestones in order and shows the first one
+   that isn't done yet, so there's always a plain-text answer to "where
+   do I go now?" without needing a drawn map. */
+function computeObjective(){
+  const who = CHALLENGES.find(c=>c.id==='who-made-this');
+  const notice = CHALLENGES.find(c=>c.id==='where-did-liz-notice-him');
+  const badmintonMem = MEMORIES.find(m=>m.id==='meet-badminton');
+  const badmintonSpot = MINIGAME_SPOTS.find(s=>s.id==='badminton-court-2');
+  const firstText = MEMORIES.find(m=>m.id==='first-text');
+  const saemaeul = MEMORIES.find(m=>m.id==='saemaeul-photo');
+
+  if(!who.solved) return "Find the first challenge hiding somewhere in your room.";
+  if(!notice.solved) return "Go talk to Bob — he's waiting out in town.";
+  if(!badmintonMem.unlocked) return "Head to the badminton court in Celadon City.";
+  if(!badmintonSpot.solved) return "Play a rally at the court next door — Kay Aun's waiting.";
+  if(!firstText.unlocked) return "Head over to Kay Aun's house and check out his phone.";
+  if(!saemaeul.unlocked) return "Find your way to the restaurant — Sae Ma Eul.";
+  return "That's every memory collected so far. ♥";
+}
+
+let lastObjectiveText = null;
+function updateObjectiveBanner(){
+  const el = document.getElementById('objectiveBanner');
+  if(!el) return;
+  const text = computeObjective();
+  if(text !== lastObjectiveText){
+    lastObjectiveText = text;
+    el.textContent = '🧭 ' + text;
+  }
+}
+
 /* ---------- Journal ---------- */
 function renderJournal(){
   const list = document.getElementById('journalList');
@@ -2302,6 +2341,7 @@ function loop(){
     updatePlayer(dt);
     draw();
   }
+  updateObjectiveBanner();
   requestAnimationFrame(loop);
 }
 
