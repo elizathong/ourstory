@@ -961,6 +961,14 @@ const MEMORIES = [
     desc: "Korean BBQ, way too much banchan, and a \"photo\" of the night that's a little too smooth around the edges to be real.",
     icon: '📸',
     unlocked: false
+  },
+  {
+    id: 'long-drives',
+    title: 'Long Drives',
+    chapter: 'Chapter 4 — Just Driving Around',
+    desc: "No destination, no plan — just the two of them driving around for hours, talking about everything and nothing.",
+    icon: '🚗',
+    unlocked: false
   }
 ];
 
@@ -1051,6 +1059,33 @@ const NPCS = [
       "But yeah... this table's kind of special to us. First real date, first conversation that just didn't stop.",
       "Come back and visit anytime — the kimchi's always good here. Kay Aun's ordering habits, less so."
     ]
+  },
+  {
+    id: 'celadon-kayaun',
+    map: 'celadon',
+    x: 47, y: 22,
+    facing: 'down',
+    sprite: 'Max',
+    name: 'Kay Aun',
+    dialogue: [
+      "This stretch of road right here? We must've driven up and down it a hundred times.",
+      "No real reason — just didn't want the night to end yet.",
+      "Windows down, terrible playlist, hours just disappearing. Honestly some of my favorite memories."
+    ],
+    memoryId: 'long-drives'
+  },
+  {
+    id: 'celadon-liz',
+    map: 'celadon',
+    x: 49, y: 22,
+    facing: 'down',
+    sprite: 'Zara',
+    name: 'Liz',
+    dialogue: [
+      "We never actually planned where we were driving — we'd just end up somewhere two hours later wondering how we got there.",
+      "Those drives were honestly where we really got to know each other. No pressure, no plans, just talking.",
+      "Some of the best nights, not gonna lie."
+    ]
   }
   // Add more NPC objects here — one per conversation/moment.
 ];
@@ -1106,6 +1141,23 @@ const CHALLENGES = [
     failText: "Nope, not that one. Think Korean BBQ, way too much banchan, and zero regrets (except maybe the bill).",
     solved: false,
     revealsAfterPhotoFor: 'kahouse-phone'
+  },
+  {
+    id: 'long-drives-quiz',
+    map: null, // triggered after closing the restaurant photo, not a map location
+    tiles: [],
+    question: 'How did we get to know each other more?',
+    options: ['Video calls every night', 'Long drives', 'Cooking classes', 'Karaoke marathons'],
+    correct: 'Long drives',
+    successText: "That's the one — we'd just drive around for hours with absolutely nowhere to go.",
+    failText: "Nope. Think less \"structured activity,\" more \"just driving around with no destination.\"",
+    solved: false,
+    followupSpeaker: 'Kay Aun',
+    followupDialogue: [
+      "That's the one — we'd just drive around for hours, radio on, no destination in mind.",
+      "Head back out to the road in Celadon City — same street as here and the badminton court, you can't miss it.",
+      "We'll be parked right there."
+    ]
   }
 ];
 
@@ -1171,7 +1223,13 @@ const MEMENTOS = [
     ],
     img: SAEMAEUL_PHOTO_SRC,
     caption: "Not a real photo — an AI-generated one, made after the fact because nobody thought to actually take a picture that night.",
-    memoryId: 'saemaeul-photo'
+    memoryId: 'saemaeul-photo',
+    afterPhoto: [
+      "That place became kind of a regular spot for us after that, honestly.",
+      "But the thing that really sealed it? We just kept finding excuses to see each other — mostly by driving around for hours with absolutely nowhere to go.",
+      "Want to guess how we actually got to know each other properly? Give it a think."
+    ],
+    afterPhotoFollowupChallenge: 'long-drives-quiz'
   }
 ];
 
@@ -2126,7 +2184,7 @@ function closePhotoViewer(){
     if(ch && !ch.solved){ openChallenge(ch); return; }
   }
   if(memento && memento.afterPhoto && memento.afterPhoto.length){
-    openDialogue({ name: memento.speaker || HIM_NAME, dialogue: memento.afterPhoto });
+    openDialogue({ name: memento.speaker || HIM_NAME, dialogue: memento.afterPhoto, followupChallenge: memento.afterPhotoFollowupChallenge });
   }
 }
 
@@ -2241,7 +2299,7 @@ function closeChallenge(){
     }
   }
   if(ch && ch.solved && ch.followupDialogue && ch.followupDialogue.length){
-    openDialogue({ name: 'Bob', dialogue: ch.followupDialogue });
+    openDialogue({ name: ch.followupSpeaker || 'Bob', dialogue: ch.followupDialogue });
   }
 }
 
@@ -2272,6 +2330,7 @@ function computeObjective(){
   const badmintonSpot = MINIGAME_SPOTS.find(s=>s.id==='badminton-court-2');
   const firstText = MEMORIES.find(m=>m.id==='first-text');
   const saemaeul = MEMORIES.find(m=>m.id==='saemaeul-photo');
+  const longDrives = MEMORIES.find(m=>m.id==='long-drives');
 
   if(!who.solved) return "Find the first challenge hiding somewhere in your room.";
   if(!notice.solved) return "Go talk to Bob — he's waiting out in town.";
@@ -2279,6 +2338,7 @@ function computeObjective(){
   if(!badmintonSpot.solved) return "Play a rally at the court next door — Kay Aun's waiting.";
   if(!firstText.unlocked) return "Head over to Kay Aun's house and check out his phone.";
   if(!saemaeul.unlocked) return "Find your way to the restaurant — Sae Ma Eul.";
+  if(!longDrives.unlocked) return "Head to the road in Celadon City, near the badminton court.";
   return "That's every memory collected so far. ♥";
 }
 
