@@ -1330,6 +1330,12 @@ const MEMENTOS = [
   }
 ];
 
+/* ---------- Map hints (a floating "!" marking a spot worth walking into,
+   like an unmarked side-path into another map, with no object to interact with) ---------- */
+const MAP_HINTS = [
+  { map: 'celadon', hintX: 48.5, hintY: 21.6 }
+];
+
 function mementoAt(x,y){
   return MEMENTOS.find(m=>m.map===currentMapId && m.tiles.some(([tx,ty])=>tx===x && ty===y));
 }
@@ -1553,6 +1559,9 @@ function draw(){
   });
   MEMENTOS.filter(m=>m.map===currentMapId).forEach(m=>{
     drawHintMarker(gctx, m.hintX*TILE, m.hintY*TILE, '#ffd166', 1/zoom);
+  });
+  MAP_HINTS.filter(h=>h.map===currentMapId).forEach(h=>{
+    drawHintMarker(gctx, h.hintX*TILE, h.hintY*TILE, '#6fb5ff', 1/zoom);
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') drawMallExitSign(gctx);
