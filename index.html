@@ -826,7 +826,8 @@ const MAPS = {
       {x:34,y:22,dir:'up', to:'badminton', spawnX:11, spawnY:14, spawnFacing:'up'},
       {x:11,y:15,dir:'up', to:'mall', spawnX:4, spawnY:21, spawnFacing:'up'},
       {x:15,y:15,dir:'up', to:'mall', spawnX:4, spawnY:21, spawnFacing:'up'},
-      {x:48,y:22,dir:'right', to:'driveway', spawnX:24, spawnY:52, spawnFacing:'up'}
+      {x:1,y:23,dir:'left', to:'driveway', spawnX:24, spawnY:52, spawnFacing:'up'},
+      {x:1,y:24,dir:'left', to:'driveway', spawnX:24, spawnY:52, spawnFacing:'up'}
     ]
   },
   mall: {
@@ -1011,7 +1012,7 @@ const MAPS = {
     defaultProps: [],
     spawn: {x:24, y:52, facing:'up'},
     warps: [
-      {x:24,y:53,dir:'down', to:'celadon', spawnX:48, spawnY:22, spawnFacing:'down'}
+      {x:24,y:53,dir:'down', to:'celadon', spawnX:2, spawnY:23, spawnFacing:'right'}
     ]
   }
 };
@@ -1252,7 +1253,7 @@ const CHALLENGES = [
     followupSpeaker: 'Kay Aun',
     followupDialogue: [
       "That's the one — we'd just drive around for hours, radio on, no destination in mind.",
-      "Head back out to the road in Celadon City — same street as here and the badminton court, you can't miss it.",
+      "Head back out to Celadon City — all the way over to the far west edge of town, past the little fountain plaza.",
       "We'll be parked right there."
     ]
   }
@@ -1333,7 +1334,7 @@ const MEMENTOS = [
 /* ---------- Map hints (a floating "!" marking a spot worth walking into,
    like an unmarked side-path into another map, with no object to interact with) ---------- */
 const MAP_HINTS = [
-  { map: 'celadon', hintX: 48.5, hintY: 21.6 }
+  { map: 'celadon', hintX: 1.5, hintY: 23.1 }
 ];
 
 function mementoAt(x,y){
@@ -2444,7 +2445,7 @@ function computeObjective(){
   if(!badmintonSpot.solved) return "Play a rally at the court next door — Kay Aun's waiting.";
   if(!firstText.unlocked) return "Head over to Kay Aun's house and check out his phone.";
   if(!saemaeul.unlocked) return "Find your way to the restaurant — Sae Ma Eul.";
-  if(!longDrives.unlocked) return "Head to the road in Celadon City, near the badminton court.";
+  if(!longDrives.unlocked) return "Head to the far west edge of Celadon City, past the fountain plaza.";
   return "That's every memory collected so far. ♥";
 }
 
