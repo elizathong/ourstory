@@ -826,8 +826,8 @@ const MAPS = {
       {x:34,y:22,dir:'up', to:'badminton', spawnX:11, spawnY:14, spawnFacing:'up'},
       {x:11,y:15,dir:'up', to:'mall', spawnX:4, spawnY:21, spawnFacing:'up'},
       {x:15,y:15,dir:'up', to:'mall', spawnX:4, spawnY:21, spawnFacing:'up'},
-      {x:1,y:23,dir:'left', to:'driveway', spawnX:24, spawnY:52, spawnFacing:'up'},
-      {x:1,y:24,dir:'left', to:'driveway', spawnX:24, spawnY:52, spawnFacing:'up'}
+      {x:1,y:23,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'},
+      {x:1,y:24,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'}
     ]
   },
   mall: {
@@ -1011,7 +1011,7 @@ const MAPS = {
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     ],
     defaultProps: [],
-    spawn: {x:24, y:52, facing:'up'},
+    spawn: {x:52, y:19, facing:'left'},
     warps: [
       {x:24,y:53,dir:'down', to:'celadon', spawnX:2, spawnY:23, spawnFacing:'right'}
     ]
@@ -1567,20 +1567,7 @@ function draw(){
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') drawMallExitSign(gctx);
-  if(currentMapId === 'driveway') drawDrivewayDouble(gctx);
   gctx.restore();
-}
-
-function drawDrivewayDouble(ctx){
-  if(!PLAYER_IDLE.complete) return;
-  const scale = (MAPS['driveway'].playerScale || 1) * 1.6;
-  const dw = NATIVE*SCALE*scale, dh = 32*SCALE*scale;
-  const tx = 52, ty = 19;
-  const px = tx*TILE - (dw-TILE)/2;
-  const py = ty*TILE - (dh-TILE);
-  ctx.imageSmoothingEnabled = false;
-  const sx = DIR_COL['down']*NATIVE;
-  ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, px,py,dw,dh);
 }
 
 const MALL_EXIT_SIGN_IMG = (()=>{ const im = new Image(); im.src = MALL_EXIT_SIGN_SRC; return im; })();
