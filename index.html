@@ -1611,7 +1611,8 @@ function draw(){
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') drawMallExitSign(gctx);
-  if(currentMapId === 'driveway') drawDrivewaySign(gctx, zoom);
+  if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya');
+  if(currentMapId === 'celadon') drawDirectionSign(gctx, zoom, 56*TILE, 13.2*TILE, 'TTDI');
   gctx.restore();
 }
 
@@ -1625,9 +1626,8 @@ function drawMallExitSign(ctx){
   ctx.drawImage(MALL_EXIT_SIGN_IMG, 0,0,32,16, x0, y0, w, h);
 }
 
-function drawDrivewaySign(ctx, zoom){
-  const s = 1/(zoom || 1); // keep on-screen size steady despite the driveway's small zoom
-  const ax = 49*TILE, ay = 18.6*TILE;
+function drawDirectionSign(ctx, zoom, ax, ay, label){
+  const s = 1/(zoom || 1); // keep on-screen size steady regardless of map zoom
   ctx.save();
   ctx.fillStyle = '#6b4a2f';
   ctx.fillRect(ax - 1*s, ay, 2*s, 10*s);
@@ -1648,7 +1648,7 @@ function drawDrivewaySign(ctx, zoom){
   ctx.font = `bold ${7*s}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('Petaling Jaya', ax - pt*0.4, ay);
+  ctx.fillText(label, ax - pt*0.4, ay);
   ctx.restore();
 }
 
