@@ -1566,7 +1566,20 @@ function draw(){
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') drawMallExitSign(gctx);
+  if(currentMapId === 'driveway') drawDrivewayDouble(gctx);
   gctx.restore();
+}
+
+function drawDrivewayDouble(ctx){
+  if(!PLAYER_IDLE.complete) return;
+  const scale = MAPS['driveway'].playerScale || 1;
+  const dw = NATIVE*SCALE*scale, dh = 32*SCALE*scale;
+  const tx = 52, ty = 19;
+  const px = tx*TILE - (dw-TILE)/2;
+  const py = ty*TILE - (dh-TILE);
+  ctx.imageSmoothingEnabled = false;
+  const sx = DIR_COL['down']*NATIVE;
+  ctx.drawImage(PLAYER_IDLE, sx,0,NATIVE,32, px,py,dw,dh);
 }
 
 const MALL_EXIT_SIGN_IMG = (()=>{ const im = new Image(); im.src = MALL_EXIT_SIGN_SRC; return im; })();
