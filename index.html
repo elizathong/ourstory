@@ -826,8 +826,9 @@ const MAPS = {
       {x:34,y:22,dir:'up', to:'badminton', spawnX:11, spawnY:14, spawnFacing:'up'},
       {x:11,y:15,dir:'up', to:'mall', spawnX:4, spawnY:21, spawnFacing:'up'},
       {x:15,y:15,dir:'up', to:'mall', spawnX:4, spawnY:21, spawnFacing:'up'},
-      {x:1,y:23,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'},
-      {x:1,y:24,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'}
+      {x:0,y:22,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'},
+      {x:0,y:23,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'},
+      {x:0,y:24,dir:'left', to:'driveway', spawnX:52, spawnY:19, spawnFacing:'left'}
     ]
   },
   mall: {
@@ -1335,7 +1336,7 @@ const MEMENTOS = [
 /* ---------- Map hints (a floating "!" marking a spot worth walking into,
    like an unmarked side-path into another map, with no object to interact with) ---------- */
 const MAP_HINTS = [
-  { map: 'celadon', hintX: 1.5, hintY: 23.1 }
+  { map: 'celadon', hintX: 0.5, hintY: 23.1 }
 ];
 
 function mementoAt(x,y){
