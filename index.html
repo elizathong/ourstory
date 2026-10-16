@@ -1608,9 +1608,9 @@ function draw(){
   });
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') drawMallExitSign(gctx);
-  if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya', 'right', camX);
-  if(currentMapId === 'celadon') drawDirectionSign(gctx, zoom, 58.5*TILE, 13*TILE, 'TTDI', 'right', camX);
-  if(currentMapId === 'city') drawDirectionSign(gctx, zoom, 1.5*TILE, 16*TILE, 'Petaling Jaya', 'left', camX);
+  if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya', 'right');
+  if(currentMapId === 'celadon') drawDirectionSign(gctx, zoom, 58.5*TILE, 13*TILE, 'TTDI', 'right');
+  if(currentMapId === 'city') drawDirectionSign(gctx, zoom, 1.5*TILE, 16*TILE, 'Petaling Jaya', 'left');
   gctx.restore();
 }
 
@@ -1624,25 +1624,12 @@ function drawMallExitSign(ctx){
   ctx.drawImage(MALL_EXIT_SIGN_IMG, 0,0,32,16, x0, y0, w, h);
 }
 
-function drawDirectionSign(ctx, zoom, ax, ay, label, dir, camX){
+function drawDirectionSign(ctx, zoom, ax, ay, label, dir){
   const s = 1/(zoom || 1); // keep on-screen size steady regardless of map zoom
   const d = dir === 'left' ? -1 : 1;
   ctx.font = `bold ${7*s}px sans-serif`;
   const textW = ctx.measureText(label).width;
   const bh = 14*s, pt = 5*s, bw = textW + 16*s; // board grows with the label so the tip never cuts into the text
-  if(camX !== undefined){
-    const margin = 6*s;
-    const textHalf = textW/2;
-    if(d < 0){
-      // left-pointing: keep the text's left edge from scrolling past the camera's left edge
-      const minAx = camX + margin - pt/2 + textHalf;
-      ax = Math.max(ax, minAx);
-    } else {
-      const viewWpx = VIEW_W*TILE/(zoom || 1);
-      const maxAx = camX + viewWpx - margin + pt/2 - textHalf;
-      ax = Math.min(ax, maxAx);
-    }
-  }
   ctx.save();
   ctx.fillStyle = '#6b4a2f';
   ctx.fillRect(ax - 1*s, ay, 2*s, 10*s);
