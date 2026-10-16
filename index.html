@@ -1788,6 +1788,7 @@ function pressB(){
   } else if(minigame.phase==='running'){
     if(minigame.kind==='treadmill') startTransition(()=>{ minigameActive = false; minigame = null; });
     else if(minigame.kind==='boxing') boxingPunch('B');
+    else if(minigame.kind==='badminton') startTransition(()=>{ minigameActive = false; minigame = null; });
   }
 }
 
