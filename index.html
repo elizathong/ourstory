@@ -1351,7 +1351,7 @@ const MEMENTOS = [
     afterPhoto: [
       "That's it, really. No big dramatic story — just hours of driving, talking about nothing and everything.",
       "Somehow those nights taught us more about each other than almost anything else did.",
-      "Thanks for riding along with us. ♥"
+      "Thanks for riding along with us. ♥ Oh — one more thing. Head over to the mall, there's something there you'll want to see."
     ]
   }
 ];
@@ -1368,6 +1368,15 @@ function mementoUnlocked(m){
     const npc = NPCS.find(n=>n.id===id);
     return npc && npc.talked;
   });
+}
+
+function mementoHasHint(m){
+  if(!mementoUnlocked(m)) return false;
+  if(m.memoryId){
+    const mem = MEMORIES.find(x=>x.id===m.memoryId);
+    if(mem && mem.unlocked) return false;
+  }
+  return true;
 }
 
 function mementoAt(x,y){
@@ -1592,7 +1601,7 @@ function draw(){
   MINIGAME_SPOTS.filter(s=>s.map===currentMapId && spotUnlocked(s) && !s.solved).forEach(s=>{
     drawHintMarker(gctx, s.hintX*TILE, s.hintY*TILE, '#9be564', 1/zoom);
   });
-  MEMENTOS.filter(m=>m.map===currentMapId && mementoUnlocked(m)).forEach(m=>{
+  MEMENTOS.filter(m=>m.map===currentMapId && mementoHasHint(m)).forEach(m=>{
     drawHintMarker(gctx, m.hintX*TILE, m.hintY*TILE, '#ffd166', 1/zoom);
   });
   MAP_HINTS.filter(h=>h.map===currentMapId).forEach(h=>{
