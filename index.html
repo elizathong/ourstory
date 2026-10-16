@@ -1244,7 +1244,12 @@ const CHALLENGES = [
     successText: "That's the one — Sae Ma Eul. Go on, see how it went.",
     failText: "Nope, not that one. Think Korean BBQ, way too much banchan, and zero regrets (except maybe the bill).",
     solved: false,
-    revealsAfterPhotoFor: 'kahouse-phone'
+    followupSpeaker: 'Kay Aun',
+    followupDialogue: [
+      "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of us just talking for hours over it.",
+      "Funny enough, it's right by the badminton court — we went straight there after a session, still sweaty and starving.",
+      "Go find your way to the restaurant in Petaling Jaya, I promise it's worth it. Bring napkins."
+    ]
   },
   {
     id: 'long-drives-quiz',
@@ -1306,13 +1311,11 @@ const MEMENTOS = [
     img: KA_TEXT_SRC,
     caption: "The first messages he ever sent her — asking her to badminton, then dinner after.",
     memoryId: 'first-text',
-    afterPhotoChallenge: 'first-date-quiz',
     afterPhoto: [
       "And after all that texting back and forth, we finally went out properly.",
-      "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of us just talking for hours over it.",
-      "Funny enough, it's right by the badminton court — we went straight there after a session, still sweaty and starving.",
-      "Go find your way to the restaurant in Petaling Jaya, I promise it's worth it. Bring napkins."
-    ]
+      "Took me long enough to actually work up the nerve to ask — but I got there eventually."
+    ],
+    afterPhotoFollowupChallenge: 'first-date-quiz'
   },
   {
     id: 'restaurant-photo',
@@ -1612,7 +1615,7 @@ function draw(){
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') drawMallExitSign(gctx);
   if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya');
-  if(currentMapId === 'celadon') drawDirectionSign(gctx, zoom, 56*TILE, 13.2*TILE, 'TTDI');
+  if(currentMapId === 'celadon') drawDirectionSign(gctx, zoom, 58.5*TILE, 13*TILE, 'TTDI');
   gctx.restore();
 }
 
