@@ -949,8 +949,9 @@ const MAPS = {
   driveway: {
     label: 'The Driveway',
     w:53, h:54,
-    playerScale: 1.6,
+    playerScale: 2.0,
     zoom: 0.3,
+    speed: 5,
     bgFrames: DRIVEWAY_BG_FRAME_SRCS.map(src=>{ const im = new Image(); im.src = src; return im; }),
     bgFrameDuration: 100,
     baseCollision: [
@@ -1572,7 +1573,7 @@ function draw(){
 
 function drawDrivewayDouble(ctx){
   if(!PLAYER_IDLE.complete) return;
-  const scale = MAPS['driveway'].playerScale || 1;
+  const scale = (MAPS['driveway'].playerScale || 1) * 1.6;
   const dw = NATIVE*SCALE*scale, dh = 32*SCALE*scale;
   const tx = 52, ty = 19;
   const px = tx*TILE - (dw-TILE)/2;
