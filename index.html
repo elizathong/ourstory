@@ -2558,6 +2558,7 @@ function computeObjective(){
   const firstText = MEMORIES.find(m=>m.id==='first-text');
   const saemaeul = MEMORIES.find(m=>m.id==='saemaeul-photo');
   const longDrives = MEMORIES.find(m=>m.id==='long-drives');
+  const mallHandhold = MEMORIES.find(m=>m.id==='mall-handhold');
 
   if(!who.solved) return "Find the first challenge hiding somewhere in your room.";
   if(!notice.solved) return "Go talk to Bob — he's waiting out in town.";
@@ -2566,7 +2567,8 @@ function computeObjective(){
   if(!firstText.unlocked) return "Head over to Kay Aun's house and check out his phone.";
   if(!saemaeul.unlocked) return "Find your way to the restaurant — Sae Ma Eul.";
   if(!longDrives.unlocked) return "Head to the far west edge of Petaling Jaya, past the fountain plaza.";
-  return "That's every memory collected so far. ♥";
+  if(!mallHandhold.unlocked) return "Head over to the mall, there's something there you'll want to see.";
+  return "That's every memory collected. ♥ Thanks for walking through our story.";
 }
 
 let lastObjectiveText = null;
