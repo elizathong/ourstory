@@ -1195,6 +1195,20 @@ const NPCS = [
       "Some of the best nights, not gonna lie. Go on — get in the car, we'll show you."
     ],
     talked: false
+  },
+  {
+    id: 'gym-kayaun',
+    map: 'gym',
+    x: 22, y: 22,
+    facing: 'down',
+    sprite: 'Max',
+    name: 'Kay Aun',
+    dialogue: [
+      "Oh hey — didn't expect you all the way out here.",
+      "This used to be my gym, back when I actually had a routine. Badminton doesn't train itself, you know.",
+      "There's a treadmill over to the west and a punching bag tucked away in the back corner, if you want to see what you're made of.",
+      "No pressure though — honestly I mostly came here to avoid cardio at home."
+    ]
   }
   // Add more NPC objects here — one per conversation/moment.
 ];
@@ -1300,6 +1314,22 @@ const BADMINTON_WIN_NPC = {
   ]
 };
 
+const TREADMILL_WIN_NPC = {
+  name: 'Kay Aun',
+  dialogue: [
+    "Not bad! You'd probably survive one of my actual training days.",
+    "...probably."
+  ]
+};
+
+const BOXING_WIN_NPC = {
+  name: 'Kay Aun',
+  dialogue: [
+    "Okay, I'll admit it — that was a pretty solid combo.",
+    "Remind me not to actually fight you."
+  ]
+};
+
 /* ---------- Mementos (objects you can inspect for a photo + memory) ---------- */
 const MEMENTOS = [
   {
@@ -1388,7 +1418,8 @@ const MEMENTOS = [
 /* ---------- Map hints (a floating "!" marking a spot worth walking into,
    like an unmarked side-path into another map, with no object to interact with) ---------- */
 const MAP_HINTS = [
-  { map: 'celadon', hintX: 0.5, hintY: 23.1 }
+  { map: 'celadon', hintX: 0.5, hintY: 23.1 },
+  { map: 'city', hintX: 24, hintY: 17.4 }
 ];
 
 function mementoUnlocked(m){
@@ -1738,6 +1769,7 @@ function drawCourt1Rally(ctx){
 // ---------- Gym minigames ----------
 let minigameActive = false;
 let minigame = null;
+const gymProgress = { treadmill: false, boxing: false }; // first-completion flags for the gym's unguided minigames
 const MINIGAME_RESULT_GRACE = 1200; // ms before a tap on the results screen can exit
 const TREADMILL_DURATION = 15000;
 const BOXING_DURATION = 10000;
@@ -1847,9 +1879,13 @@ function pressA(){
     const spot = minigame.spotId ? MINIGAME_SPOTS.find(s=>s.id===minigame.spotId) : null;
     const firstWin = won && spot && !spot.solved;
     if(spot && won) spot.solved = true;
+    const kind = minigame.kind;
+    const firstGymCompletion = (kind==='treadmill' || kind==='boxing') && !gymProgress[kind];
+    if(firstGymCompletion) gymProgress[kind] = true;
     startTransition(()=>{
       minigameActive = false; minigame = null;
       if(firstWin) openDialogue(BADMINTON_WIN_NPC);
+      else if(firstGymCompletion) openDialogue(kind==='treadmill' ? TREADMILL_WIN_NPC : BOXING_WIN_NPC);
     });
   }
 }
