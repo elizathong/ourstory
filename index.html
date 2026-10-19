@@ -1068,6 +1068,14 @@ const MEMORIES = [
     desc: "No destination, no plan — just the two of them driving around for hours, talking about everything and nothing.",
     icon: '🚗',
     unlocked: false
+  },
+  {
+    id: 'mall-handhold',
+    title: 'The Mall',
+    chapter: 'Chapter 5 — Officially Us',
+    desc: "No grand gesture, no big question — just an afternoon wandering around, a hand held out, and a hand that took it.",
+    icon: '🤝',
+    unlocked: false
   }
 ];
 
@@ -1354,6 +1362,21 @@ const MEMENTOS = [
       "Somehow those nights taught us more about each other than almost anything else did.",
       "Head over to the mall, there's something there you'll want to see."
     ]
+  },
+  {
+    id: 'mall-handhold',
+    map: 'celadon',
+    tiles: [[30,2]],
+    hintX: 30.5, hintY: 1.6,
+    speaker: 'Liz',
+    dialogue: [
+      "We spent that whole afternoon wandering around the mall together — no real plan, just talking and laughing at nothing in particular.",
+      "And then, somewhere between one shop and the next, he just held his hand out. No big speech, no build-up, nothing rehearsed.",
+      "I didn't even think twice — I just put my hand in his, like it was the easiest thing in the world.",
+      "That was it, honestly. No grand \"will you be my girlfriend\" moment — he never actually asked, if you can believe that. Hmph.",
+      "But somehow, that was enough. That's how we became us."
+    ],
+    memoryId: 'mall-handhold'
   }
 ];
 
@@ -2425,7 +2448,15 @@ function closeDialogue(){
     setTimeout(()=>{
       dialogBoxEl().style.display = 'none';
       dialogBoxEl().classList.remove('fadeOut');
-      openPhotoViewer(followupMemento);
+      if(followupMemento.img){
+        openPhotoViewer(followupMemento);
+      } else {
+        // story-only memento with no photo — unlock the memory and move straight to the afterPhoto dialogue, if any
+        if(followupMemento.memoryId) unlockMemory(followupMemento.memoryId);
+        if(followupMemento.afterPhoto && followupMemento.afterPhoto.length){
+          openDialogue({ name: followupMemento.speaker || HIM_NAME, dialogue: followupMemento.afterPhoto, followupChallenge: followupMemento.afterPhotoFollowupChallenge });
+        }
+      }
     }, 550);
     return;
   }
