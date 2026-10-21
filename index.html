@@ -1439,9 +1439,7 @@ const MEMENTOS = [
 
 /* ---------- Map hints (a floating "!" marking a spot worth walking into,
    like an unmarked side-path into another map, with no object to interact with) ---------- */
-const MAP_HINTS = [
-  { map: 'celadon', hintX: 0.5, hintY: 23.1 }
-];
+const MAP_HINTS = [];
 
 function mementoUnlocked(m){
   if(!m.requiresAll) return true;
@@ -1691,7 +1689,7 @@ function draw(){
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') { drawMallExitSign(gctx, 4.5*TILE, 21*TILE); drawMallExitSign(gctx, 32*TILE, 20*TILE, -Math.PI/2); }
   if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya', 'right');
-  if(currentMapId === 'celadon') drawDirectionSign(gctx, zoom, 58.5*TILE, 13*TILE, 'TTDI', 'right');
+  if(currentMapId === 'celadon') { drawDirectionSign(gctx, zoom, 58.5*TILE, 13*TILE, 'TTDI', 'right'); drawDirectionSign(gctx, zoom, 2.5*TILE, 23*TILE, 'Driveway', 'left'); }
   if(currentMapId === 'city') drawDirectionSign(gctx, zoom, 1.5*TILE, 16*TILE, 'Petaling Jaya', 'left');
   gctx.restore();
 }
