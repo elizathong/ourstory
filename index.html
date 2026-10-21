@@ -1079,6 +1079,14 @@ const MEMORIES = [
     unlocked: false
   },
   {
+    id: 'first-trip',
+    title: 'Pulau Redang',
+    chapter: 'Chapter 6 — Normal Couple Things',
+    desc: "Butterflies, overthinking every text, way too much badminton — and then our first actual trip together.",
+    icon: '🏝️',
+    unlocked: false
+  },
+  {
     id: 'secret-note',
     title: 'A Hidden Note',
     chapter: 'Just Between Us',
@@ -1217,6 +1225,22 @@ const NPCS = [
       "There's a treadmill over to the west and a punching bag tucked away in the back corner, if you want to see what you're made of.",
       "No pressure though — honestly I mostly came here to avoid cardio at home."
     ]
+  },
+  {
+    id: 'celadon-dating-liz',
+    map: 'celadon',
+    x: 35, y: 3,
+    facing: 'down',
+    sprite: 'Zara',
+    name: 'Liz',
+    dialogue: [
+      "Okay, after that whole hand-holding moment, things got... genuinely ridiculous for a while.",
+      "Every text took forever to send because we were both overthinking a single \"hey\" like it was a legal document.",
+      "Full butterflies, stomach doing backflips, the whole cheesy package — and neither of us would admit it out loud for weeks.",
+      "We did all the normal couple things after that too. Dinners. More badminton, obviously. Him driving me two minutes down the road just because he \"wanted an excuse to see me.\"",
+      "And then, not too long after all that, we actually went on our first trip together."
+    ],
+    followupChallenge: 'first-trip-quiz'
   }
   // Add more NPC objects here — one per conversation/moment.
 ];
@@ -1294,6 +1318,25 @@ const CHALLENGES = [
       "Head back out to Petaling Jaya — all the way over to the far west edge of town, past the little fountain plaza.",
       "We'll be parked right there."
     ]
+  },
+  {
+    id: 'first-trip-quiz',
+    map: null, // triggered after closing the celadon dating-life dialogue, not a map location
+    tiles: [],
+    question: 'Where was our first trip together?',
+    options: ['Pulau Redang', 'Gohtong Jaya', 'Ipoh', 'Melaka'],
+    correct: 'Pulau Redang',
+    successText: "That's the one! Three days of sun, questionable snorkeling form, and way too much sunscreen.",
+    failText: "Nope — think tropical island, not hill resort or old town. Try again.",
+    solved: false,
+    followupSpeaker: 'Kay Aun',
+    followupDialogue: [
+      "Pulau Redang — our first actual trip together, just the two of us.",
+      "I genuinely did not expect her to get seasick on a boat that calm, but here we are.",
+      "Still one of my favorite trips ever, questionable snorkeling form and all.",
+      "There's more to come, but that's a story for another day."
+    ],
+    memoryId: 'first-trip'
   }
 ];
 
@@ -2581,7 +2624,7 @@ function closeChallenge(){
     }
   }
   if(ch && ch.solved && ch.followupDialogue && ch.followupDialogue.length){
-    openDialogue({ name: ch.followupSpeaker || 'Bob', dialogue: ch.followupDialogue });
+    openDialogue({ name: ch.followupSpeaker || 'Bob', dialogue: ch.followupDialogue, memoryId: ch.memoryId });
   }
 }
 
@@ -2614,6 +2657,7 @@ function computeObjective(){
   const saemaeul = MEMORIES.find(m=>m.id==='saemaeul-photo');
   const longDrives = MEMORIES.find(m=>m.id==='long-drives');
   const mallHandhold = MEMORIES.find(m=>m.id==='mall-handhold');
+  const firstTrip = MEMORIES.find(m=>m.id==='first-trip');
 
   if(!who.solved) return "Find the first challenge hiding somewhere in your room.";
   if(!notice.solved) return "Go talk to Bob — he's waiting out in town.";
@@ -2623,6 +2667,7 @@ function computeObjective(){
   if(!saemaeul.unlocked) return "Find your way to the restaurant — Sae Ma Eul.";
   if(!longDrives.unlocked) return "Head to the far west edge of Petaling Jaya, past the fountain plaza.";
   if(!mallHandhold.unlocked) return "Head over to the mall, there's something there you'll want to see.";
+  if(!firstTrip.unlocked) return "Head back into Petaling Jaya — there's someone there with more to tell you.";
   return "That's every memory collected. ♥ Thanks for walking through our story.";
 }
 
