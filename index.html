@@ -1225,39 +1225,13 @@ const NPCS = [
     sprite: 'Bob',
     name: 'Bob',
     dialogue: [
-      "Church always ran long, so a few of them started playing badminton after service to unwind.",
-      "This is actually where he first noticed her, you know — right over there, absolutely destroying everyone at doubles.",
+      "After church, a few of them would head over to play badminton together to unwind.",
+      "This is also one of the first few places Kay Aun noticed Liz — right over there, absolutely destroying everyone at doubles.",
       "He had no idea back then she'd end up being... well, everything. Also he definitely lost that match because he couldn't stop staring.",
       "Funny thing is, she thinks he kept losing on purpose just to keep playing another round. Subtle, right?",
       "Think you could keep a rally going like that? Go on — head to the next court and take up the challenge yourself."
     ],
     memoryId: 'meet-badminton'
-  },
-  {
-    id: 'badminton-kayaun',
-    map: 'badminton',
-    x: 6, y: 4,
-    facing: 'down',
-    sprite: 'Max',
-    name: 'Kay Aun',
-    dialogue: [
-      "(He's still catching his breath from the last rally.)",
-      "Careful, I've been on a bit of a winning streak today. Bit is generous.",
-      "Ask Bob over there if you want the real story though — he tells it better than I do."
-    ]
-  },
-  {
-    id: 'badminton-liz',
-    map: 'badminton',
-    x: 6, y: 8,
-    facing: 'up',
-    sprite: 'Zara',
-    name: 'Liz',
-    dialogue: [
-      "Church always runs long, so a few of us started playing after service to unwind.",
-      "Don't let him fool you — I'm the one who actually wins most of these.",
-      "Go talk to Bob if you want the whole story of how this court became kind of a big deal."
-    ]
   },
   {
     id: 'restaurant-kayaun',
@@ -1364,7 +1338,7 @@ const CHALLENGES = [
     options: ['Liz', 'Kay Aun'],
     correct: 'Liz',
     successText: "That's right — Liz made this whole thing, just for you. Yes, including the bugs. ♥",
-    failText: "Not quite... give it another guess! (Hint: it definitely wasn't Kay Aun. He can barely work the TV remote.)",
+    failText: "Not quite... give it another guess! (Hint: it definitely wasn't Kay Aun. He can barely work a washing machine.)",
     solved: false,
     followupDialogue: [
       "Nice guess — Liz really did build this whole thing, start to finish.",
@@ -1380,14 +1354,11 @@ const CHALLENGES = [
     question: 'Where did Liz first notice him?',
     options: ['Church badminton court', 'The Pokémon Center'],
     correct: 'Church badminton court',
-    successText: "That's it! Go find the badminton court in Petaling Jaya — there's a rally worth watching (and possibly some suspicious flirting).",
-    failText: "Hmm, not quite. Think about where the two of them used to unwind after church. Hint: it involves a net and questionable athletic ability.",
+    successText: "Ding ding ding!",
+    failText: "Think about where the two of them can unwind near church.",
     solved: false,
     followupDialogue: [
-      "Nice — that's exactly right.",
-      "The court's over in Petaling Jaya. Head out through Taman Tun Dr Ismail (TTDI) and follow the path, you can't really miss it.",
-      "And don't worry about getting turned around — just check the compass up top if you're not sure where to go.",
-      "Go on, I'll see you there. I moonlight as the umpire, if you can believe that."
+      "Nice — that's exactly right. Go find the badminton court in Petaling Jaya — there's a rally worth watching (and possibly some suspicious flirting)."
     ]
   },
   {
@@ -1471,11 +1442,11 @@ const MINIGAME_SPOTS = [
 ];
 
 const BADMINTON_WIN_NPC = {
-  name: 'Kay Aun',
+  name: 'Bob',
   dialogue: [
-    "Ha — that was actually really fun to watch. Better form than my first-date self, honestly.",
+    "Ha — that was actually really fun to watch. Better form than their first-date self, honestly.",
     "You know, there's more of this story sitting at my place, if you want to see it.",
-    "Head over to my house — I think you'll want to see what's on my phone. Don't judge the meme folder."
+    "Head over to Kay Aun's house — I think you'll want to see what's on his phone. Don't judge the meme folder."
   ]
 };
 
