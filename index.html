@@ -1258,9 +1258,9 @@ const NPCS = [
     scale: 1.1,
     name: 'Liz',
     dialogue: [
-      "Ugh, don't remind him about the banchan — he ordered way too much haha. Eleven side dishes. For two people.",
-      "But yeah... this table's kind of special to us. First real date, first conversation that just didn't stop.",
-      "Come back and visit anytime — the kimchi's always good here. Kay Aun's ordering habits, less so."
+      "Honestly? I was so nervous that first night I barely tasted half the food.",
+      "But something about this place just put us both at ease — we ended up staying for hours, way past when the food was even still warm.",
+      "Good food, better company. Can't complain, even with the banchan overload in hindsight."
     ]
   },
   {
@@ -1352,7 +1352,7 @@ const CHALLENGES = [
     map: null, // triggered by finishing the narrator's dialogue, not a map location
     tiles: [],
     question: 'Where did Liz first notice him?',
-    options: ['Church badminton court', 'The Pokémon Center'],
+    options: ['Church badminton court', 'Rushing off to be somewhere else, late as usual', 'Queuing for mamak supper at 1am', 'Attempting to parallel park (very badly)'],
     correct: 'Church badminton court',
     successText: "Ding ding ding!",
     failText: "Think about where the two of them can unwind near church.",
@@ -1366,16 +1366,16 @@ const CHALLENGES = [
     map: null, // triggered after closing the kahouse phone photo, not a map location
     tiles: [],
     question: 'Where was our first date?',
-    options: ['STREAT Thai', 'Sae Ma Eul', 'Menya Shishido', 'We actually just walked around Jaya One'],
+    options: ['STREAT Thai', 'Sae Ma Eul', 'Menya Shishido', 'We actually just ended up walking around Jaya One'],
     correct: 'Sae Ma Eul',
     successText: "That's the one — Sae Ma Eul. Go on, see how it went.",
     failText: "Nope, not that one. Think Korean BBQ, way too much banchan, and zero regrets (except maybe the bill).",
     solved: false,
-    followupSpeaker: 'Kay Aun',
+    followupSpeaker: 'Bob',
     followupDialogue: [
-      "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of us just talking for hours over it.",
-      "Funny enough, it's right by the badminton court — we went straight there after a session, still sweaty and starving.",
-      "Go find your way to the restaurant in Petaling Jaya, I promise it's worth it. Bring napkins."
+      "Sae Ma Eul — this incredible little Korean BBQ spot at Jaya One. Grills sizzling at every table, banchan piled up everywhere, the two of them just talking for hours over it.",
+      "Funny enough, it's right by the badminton court — they went straight there after a session, still sweaty and starving.",
+      "Go find your way to the restaurant in Petaling Jaya, trust me, it's worth it. Bring napkins."
     ]
   },
   {
@@ -1383,10 +1383,10 @@ const CHALLENGES = [
     map: null, // triggered after closing the restaurant photo, not a map location
     tiles: [],
     question: 'How did we get to know each other more?',
-    options: ['Video calls every night', 'Long drives', 'Cooking classes', 'Karaoke marathons'],
+    options: ['Video calls every night', 'Long drives', 'Cooking classes', 'Badminton sessions'],
     correct: 'Long drives',
-    successText: "That's the one — we'd just drive around for hours with absolutely nowhere to go.",
-    failText: "Nope. Think less \"structured activity,\" more \"just driving around with no destination.\"",
+    successText: "Ding ding ding!",
+    failText: "Nope.",
     solved: false,
     followupSpeaker: 'Kay Aun',
     followupDialogue: [
@@ -1402,15 +1402,15 @@ const CHALLENGES = [
     question: 'Where was our first trip together?',
     options: ['Pulau Redang', 'Gohtong Jaya', 'Ipoh', 'Melaka'],
     correct: 'Pulau Redang',
-    successText: "That's the one! Three days of sun, questionable snorkeling form, and way too much sunscreen.",
-    failText: "Nope — think tropical island, not hill resort or old town. Try again.",
+    successText: "That's the one!",
+    failText: "Nope",
     solved: false,
     followupSpeaker: 'Kay Aun',
     followupDialogue: [
       "Pulau Redang — our first actual trip together, just the two of us.",
       "Confession: it wasn't exactly a relaxing beach holiday. I may have picked a sea turtle volunteer program on purpose, just to see how she'd handle it.",
       "Call it a test, if you want. Don't tell her I said that.",
-      "Actually — come on, let's go. Meet us back at the driveway and get in the car. We'll show you properly this time."
+      "Actually — come on, let's go. Meet us back at the driveway and get in the car."
     ],
     memoryId: 'first-trip'
   }
@@ -1445,7 +1445,7 @@ const BADMINTON_WIN_NPC = {
   name: 'Bob',
   dialogue: [
     "Ha — that was actually really fun to watch. Better form than their first-date self, honestly.",
-    "You know, there's more of this story sitting at my place, if you want to see it.",
+    "You know, there's more of this story sitting at Kay Aun's place, if you want to see it.",
     "Head over to Kay Aun's house — I think you'll want to see what's on his phone. Don't judge the meme folder."
   ]
 };
@@ -1495,17 +1495,18 @@ const MEMENTOS = [
     hintX: 15.5, hintY: 10.6,
     speaker: 'Kay Aun',
     dialogue: [
-      "Oh, you found our \"photo\" from that night. Full disclosure...",
+      "You found us! Liz is really shy about pictures, so this one's... a little different.",
       "...neither of us actually thought to take a picture mid-meal, so this one's AI-generated after the fact. Not gonna lie though, it's a pretty good likeness. My jawline's never looked better, frankly.",
       "Close enough to the real thing, right? Take a look."
     ],
     img: SAEMAEUL_PHOTO_SRC,
     caption: "Not a real photo — an AI-generated one, made after the fact because nobody thought to actually take a picture that night.",
     memoryId: 'saemaeul-photo',
+    afterPhotoSpeaker: 'Bob',
     afterPhoto: [
-      "That place became kind of a regular spot for us after that, honestly.",
-      "But the thing that really sealed it? We just kept finding excuses to see each other — mostly by driving around for hours with absolutely nowhere to go.",
-      "Want to guess how we actually got to know each other properly? Give it a think."
+      "After that night, honestly, neither of them could wait to see each other again.",
+      "They just wanted to know everything — favorite foods, weird habits, embarrassing stories, all of it.",
+      "So, how do you think they ended up getting to know each other best? Give it a think."
     ],
     afterPhotoFollowupChallenge: 'long-drives-quiz'
   },
@@ -2747,7 +2748,7 @@ function closePhotoViewer(){
     if(ch && !ch.solved){ openChallenge(ch); return; }
   }
   if(memento && memento.afterPhoto && memento.afterPhoto.length){
-    openDialogue({ name: memento.speaker || HIM_NAME, dialogue: memento.afterPhoto, followupChallenge: memento.afterPhotoFollowupChallenge });
+    openDialogue({ name: memento.afterPhotoSpeaker || memento.speaker || HIM_NAME, dialogue: memento.afterPhoto, followupChallenge: memento.afterPhotoFollowupChallenge });
   }
 }
 
@@ -2804,7 +2805,7 @@ function closeDialogue(){
         // story-only memento with no photo — unlock the memory and move straight to the afterPhoto dialogue, if any
         if(followupMemento.memoryId) unlockMemory(followupMemento.memoryId);
         if(followupMemento.afterPhoto && followupMemento.afterPhoto.length){
-          openDialogue({ name: followupMemento.speaker || HIM_NAME, dialogue: followupMemento.afterPhoto, followupChallenge: followupMemento.afterPhotoFollowupChallenge });
+          openDialogue({ name: followupMemento.afterPhotoSpeaker || followupMemento.speaker || HIM_NAME, dialogue: followupMemento.afterPhoto, followupChallenge: followupMemento.afterPhotoFollowupChallenge });
         }
       }
     }, 550);
@@ -2866,7 +2867,7 @@ function closeChallenge(){
   if(ch && ch.solved && ch.revealsAfterPhotoFor){
     const mem = MEMENTOS.find(m=>m.id===ch.revealsAfterPhotoFor);
     if(mem && mem.afterPhoto && mem.afterPhoto.length){
-      openDialogue({ name: mem.speaker || HIM_NAME, dialogue: mem.afterPhoto });
+      openDialogue({ name: mem.afterPhotoSpeaker || mem.speaker || HIM_NAME, dialogue: mem.afterPhoto });
       return;
     }
   }
