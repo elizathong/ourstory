@@ -1315,6 +1315,7 @@ const NPCS = [
     facing: 'down',
     sprite: 'Zara',
     name: 'Liz',
+    requiresTalked: 'celadon-dating-kayaun',
     dialogue: [
       "Okay, after that whole hand-holding moment, things got... genuinely ridiculous for a while.",
       "Every text took forever to send because we were both overthinking a single \"hey\" like it was a legal document.",
@@ -1331,6 +1332,7 @@ const NPCS = [
     facing: 'down',
     sprite: 'Max',
     name: 'Kay Aun',
+    talked: false,
     dialogue: [
       "We spent that whole afternoon wandering around the mall together — no real plan, just talking and laughing at nothing in particular.",
       "And then, somewhere between one shop and the next, I just held my hand out. No big speech, no build-up, nothing rehearsed.",
@@ -1822,6 +1824,7 @@ function drawNPC(ctx, npc){
 }
 
 function npcHasHint(npc){
+  if(!npcUnlocked(npc)) return false;
   if(npc.talked === false) return true;
   if(npc.memoryId){
     const mem = MEMORIES.find(m=>m.id===npc.memoryId);
@@ -2679,8 +2682,14 @@ function facingTile(){
   return { x: player.x+dx, y: player.y+dy };
 }
 
+function npcUnlocked(npc){
+  if(!npc.requiresTalked) return true;
+  const other = NPCS.find(n=>n.id===npc.requiresTalked);
+  return !!(other && other.talked === true);
+}
+
 function npcAt(x,y){
-  return NPCS.find(n=>n.map===currentMapId && n.x===x && n.y===y && !n.silent);
+  return NPCS.find(n=>n.map===currentMapId && n.x===x && n.y===y && !n.silent && npcUnlocked(n));
 }
 
 function challengeAt(x,y){
