@@ -784,8 +784,8 @@ const MAPS = {
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
-      [1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],
-      [1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1],
+      [1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1],
@@ -873,8 +873,8 @@ const MAPS = {
     spawn: {x:4, y:21, facing:'up'},
     warps: [
       {x:4,y:20,dir:'down', to:'celadon', spawnX:11, spawnY:15, spawnFacing:'down'},
-      {x:31,y:20,dir:'right', to:'celadon', spawnX:30, spawnY:4, spawnFacing:'right'},
-      {x:31,y:21,dir:'right', to:'celadon', spawnX:30, spawnY:4, spawnFacing:'right'}
+      {x:31,y:20,dir:'right', to:'celadon', spawnX:13, spawnY:4, spawnFacing:'right'},
+      {x:31,y:21,dir:'right', to:'celadon', spawnX:13, spawnY:4, spawnFacing:'right'}
     ]
   },
   badminton: {
@@ -1311,7 +1311,7 @@ const NPCS = [
   {
     id: 'celadon-dating-liz',
     map: 'celadon',
-    x: 35, y: 3,
+    x: 14, y: 3,
     facing: 'down',
     sprite: 'Zara',
     name: 'Liz',
@@ -1323,6 +1323,20 @@ const NPCS = [
       "And then, not too long after all that, we actually went on our first trip together."
     ],
     followupChallenge: 'first-trip-quiz'
+  },
+  {
+    id: 'celadon-dating-kayaun',
+    map: 'celadon',
+    x: 13, y: 3,
+    facing: 'down',
+    sprite: 'Max',
+    name: 'Kay Aun',
+    dialogue: [
+      "We spent that whole afternoon wandering around the mall together — no real plan, just talking and laughing at nothing in particular.",
+      "And then, somewhere between one shop and the next, I just held my hand out. No big speech, no build-up, nothing rehearsed.",
+      "Take a look — we actually have proof this happened."
+    ],
+    followupMementoId: 'mall-handhold'
   }
   // Add more NPC objects here — one per conversation/moment.
 ];
@@ -1536,15 +1550,9 @@ const MEMENTOS = [
   },
   {
     id: 'mall-handhold',
-    map: 'celadon',
-    tiles: [[30,2]],
-    hintX: 30.5, hintY: 1.6,
+    map: null,
+    tiles: [],
     speaker: 'Liz',
-    dialogue: [
-      "We spent that whole afternoon wandering around the mall together — no real plan, just talking and laughing at nothing in particular.",
-      "And then, somewhere between one shop and the next, he just held his hand out. No big speech, no build-up, nothing rehearsed.",
-      "Take a look — I actually have proof this happened."
-    ],
     img: MALL_HANDHOLD_SRC,
     caption: "The selfie right where it happened, and hand in hand on the walk back after.",
     memoryId: 'mall-handhold',
@@ -2781,7 +2789,7 @@ function closeDialogue(){
   if(activeNPC && activeNPC.memoryId) unlockMemory(activeNPC.memoryId);
   if(activeNPC && activeNPC.talked === false) activeNPC.talked = true;
   const followupId = activeNPC && activeNPC.followupChallenge;
-  const followupMemento = activeNPC && activeNPC.followupMemento;
+  const followupMemento = activeNPC && (activeNPC.followupMemento || (activeNPC.followupMementoId && MEMENTOS.find(m=>m.id===activeNPC.followupMementoId)));
   dialogueActive = false;
   activeNPC = null;
   dialogueLineIdx = 0;
