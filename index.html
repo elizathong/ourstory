@@ -1029,7 +1029,7 @@ const MAPS = {
   beach: {
     label: 'Pulau Redang',
     w:71, h:40,
-    zoom: 0.5,
+    zoom: 0.35,
     playerScale: 1.6,
     speed: 5,
     bgFrames: BEACH_BG_FRAME_SRCS.map(src=>{ const im = new Image(); im.src = src; return im; }),
@@ -1999,8 +1999,8 @@ const BAD_LAUNCH_X = 258, BAD_LAUNCH_Y = 162; // where the shuttle launches from
 const BAD_OPPONENT_X = 262, BAD_OPPONENT_Y = 183; // opponent's fixed position on the right
 const BADMINTON_PLAYER_SPEED = 3.2;
 const DRIVING_DURATION = 12000; // survive this long to make it to the beach
-const DRIVING_TRAVEL_MS = 1700; // time for an obstacle car to cross from the top to the player's row
-const DRIVING_SPAWN_INTERVAL = 850; // ms between obstacle spawns
+const DRIVING_TRAVEL_MS = 1150; // time for an obstacle car to cross from the top to the player's row
+const DRIVING_SPAWN_INTERVAL = 580; // ms between obstacle spawns
 const DRIVING_LANE_COUNT = 3;
 const DRIVING_CRASH_ZONE = 0.86; // obstacle progress (0-1) past which it can collide with the player's lane
 
