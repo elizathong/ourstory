@@ -1219,6 +1219,24 @@ const NPCS = [
     memoryId: 'meet-badminton'
   },
   {
+    id: 'badminton-kayaun',
+    map: 'badminton',
+    x: 6, y: 4,
+    facing: 'down',
+    sprite: 'Max',
+    name: 'Kay Aun',
+    silent: true
+  },
+  {
+    id: 'badminton-liz',
+    map: 'badminton',
+    x: 6, y: 8,
+    facing: 'up',
+    sprite: 'Zara',
+    name: 'Liz',
+    silent: true
+  },
+  {
     id: 'restaurant-kayaun',
     map: 'restaurant',
     x: 16, y: 10,
@@ -2654,7 +2672,7 @@ function facingTile(){
 }
 
 function npcAt(x,y){
-  return NPCS.find(n=>n.map===currentMapId && n.x===x && n.y===y);
+  return NPCS.find(n=>n.map===currentMapId && n.x===x && n.y===y && !n.silent);
 }
 
 function challengeAt(x,y){
