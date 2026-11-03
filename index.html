@@ -1176,6 +1176,14 @@ const MEMORIES = [
     unlocked: false
   },
   {
+    id: 'turtle-egg-hunt',
+    title: 'Turtle Guardian',
+    chapter: 'Pulau Redang — Bonus',
+    desc: "Helped Bob track down every turtle egg hidden along the shore. Nest fully accounted for.",
+    icon: '🥚',
+    unlocked: false
+  },
+  {
     id: 'secret-note',
     title: 'A Hidden Note',
     chapter: 'Just Between Us',
@@ -1339,9 +1347,56 @@ const NPCS = [
       "Take a look — we actually have proof this happened."
     ],
     followupMementoId: 'mall-handhold'
+  },
+  {
+    id: 'beach-bob',
+    map: 'beach',
+    x: 60, y: 8,
+    facing: 'down',
+    sprite: 'Bob',
+    name: 'Bob',
+    dialogue: [
+      "Hey — glad you made it out here too."
+    ]
   }
   // Add more NPC objects here — one per conversation/moment.
 ];
+
+function beachEggHuntDone(){
+  const mem = MEMORIES.find(m=>m.id==='turtle-egg-hunt');
+  return !!(mem && mem.unlocked);
+}
+
+function updateBeachBobState(npc){
+  if(beachEggHuntDone()){
+    npc.dialogue = [
+      "Those turtles are still out there somewhere because of you. Good work."
+    ];
+    delete npc.followupMementoId;
+  } else if(beachEggsAllFound()){
+    npc.dialogue = [
+      "Wait — you actually found all five? Let me see.",
+      "...yep, every single one. Nicely done."
+    ];
+    npc.followupMementoId = 'turtle-egg-reward';
+  } else if(beachEggHuntStarted){
+    const remaining = TURTLE_EGGS.filter(e=>!e.found).length;
+    npc.dialogue = [
+      `Still ${remaining} out there somewhere. Keep an eye on the sand.`
+    ];
+    delete npc.followupMementoId;
+  } else {
+    npc.dialogue = [
+      "Hey — glad you made it out here too.",
+      "You know the real reason they signed up for this trip, right? Not just the beach. The turtles.",
+      "There's a nest nearby that got scattered before anyone could log it properly — five eggs, missing.",
+      "Think you could track them down? Just walk the shoreline — you'll know one when you see it.",
+      "Come find me again once you've got all five."
+    ];
+    beachEggHuntStarted = true;
+    delete npc.followupMementoId;
+  }
+}
 
 /* ---------- Challenges (multiple-choice questions placed on the map) ----------
    Place a `!` near an object. `tiles` lists every tile of that object the
@@ -1629,12 +1684,40 @@ const MEMENTOS = [
     img: TURTLE_SWIM_SRC,
     caption: "The whole reason we were out there in the first place.",
     memoryId: 'turtle-swim-clip'
+  },
+  {
+    id: 'turtle-egg-reward',
+    map: null,
+    tiles: [],
+    speaker: 'Bob',
+    img: BEACH_TRIP_PHOTOS_SRC,
+    caption: "Proof it was worth it — turtle eggs, hatchlings, and the two of them, sandfly bites and all.",
+    memoryId: 'turtle-egg-hunt',
+    afterPhoto: [
+      "Nice work, Turtle Guardian. Every single nest, accounted for.",
+      "That's the whole reason they went out there in the first place — not for a relaxing holiday, but for this.",
+      "Worth it, right?"
+    ]
   }
 ];
 
 /* ---------- Map hints (a floating "!" marking a spot worth walking into,
    like an unmarked side-path into another map, with no object to interact with) ---------- */
 const MAP_HINTS = [];
+
+/* ---------- Turtle egg hunt (beach bonus activity) ----------
+   Talk to Bob on the beach to start the hunt, walk onto each egg to
+   collect it, then go back to Bob once all 5 are found. */
+const TURTLE_EGGS = [
+  { id:'egg-1', map:'beach', x:10, y:12, found:false },
+  { id:'egg-2', map:'beach', x:46, y:2,  found:false },
+  { id:'egg-3', map:'beach', x:8,  y:30, found:false },
+  { id:'egg-4', map:'beach', x:12, y:20, found:false },
+  { id:'egg-5', map:'beach', x:50, y:16, found:false }
+];
+let beachEggHuntStarted = false;
+let beachEggHuntTurnedIn = false;
+function beachEggsAllFound(){ return TURTLE_EGGS.every(e=>e.found); }
 
 function mementoUnlocked(m){
   if(!m.requiresAll) return true;
@@ -1744,6 +1827,10 @@ function tryMove(dir){
   if(isBlocked(nx,ny)) return;
   const mgTile = (map.minigameTiles||[]).find(t=>t.x===nx && t.y===ny);
   if(mgTile) pendingDoorAction = ()=> startMinigame(mgTile.game);
+  if(currentMapId==='beach' && beachEggHuntStarted && !beachEggHuntDone()){
+    const egg = TURTLE_EGGS.find(e=>!e.found && e.x===nx && e.y===ny);
+    if(egg){ egg.found = true; playNotifySound(); }
+  }
   player.x=nx; player.y=ny;
   player.targetPx = nx*TILE; player.targetPy = ny*TILE;
   player.moving = true;
@@ -1825,6 +1912,11 @@ function drawNPC(ctx, npc){
 
 function npcHasHint(npc){
   if(!npcUnlocked(npc)) return false;
+  if(npc.id==='beach-bob'){
+    if(beachEggHuntDone()) return false;
+    if(!beachEggHuntStarted) return true;
+    return beachEggsAllFound();
+  }
   if(npc.talked === false) return true;
   if(npc.memoryId){
     const mem = MEMORIES.find(m=>m.id===npc.memoryId);
@@ -1882,6 +1974,11 @@ function draw(){
   MAP_HINTS.filter(h=>h.map===currentMapId).forEach(h=>{
     drawHintMarker(gctx, h.hintX*TILE, h.hintY*TILE, '#6fb5ff', 1/zoom);
   });
+  if(currentMapId==='beach' && beachEggHuntStarted && !beachEggHuntDone()){
+    TURTLE_EGGS.filter(e=>!e.found).forEach(e=>{
+      drawEggMarker(gctx, e.x*TILE+TILE/2, e.y*TILE+TILE/2, 1/zoom);
+    });
+  }
   if(currentMapId === 'badminton') drawCourt1Rally(gctx);
   if(currentMapId === 'mall') { drawMallExitSign(gctx, 4.5*TILE, 21*TILE); drawMallExitSign(gctx, 32*TILE, 20*TILE, -Math.PI/2); }
   if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya', 'right');
@@ -1951,6 +2048,33 @@ function drawHintMarker(ctx, x, y, color, mscale){
   ctx.font = `bold ${15*mscale}px monospace`;
   ctx.textAlign = 'center';
   ctx.fillText('!', x, cy);
+}
+
+function drawEggMarker(ctx, x, y, mscale){
+  mscale = mscale || 1;
+  const bob = Math.sin(Date.now()/260)*2*mscale;
+  const cy = y + bob;
+  const w = 7*mscale, h = 9*mscale;
+  ctx.save();
+  ctx.translate(x, cy);
+  ctx.fillStyle = 'rgba(20,16,26,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(0, h*0.7, w*0.8, h*0.25, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#fff6df';
+  ctx.strokeStyle = '#caa86a';
+  ctx.lineWidth = 1.2*mscale;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, w, h, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#d8c398';
+  [[-2.5,-2,1.1],[2,1,1.3],[-1,3.5,0.9]].forEach(([dx,dy,r])=>{
+    ctx.beginPath();
+    ctx.arc(dx*mscale, dy*mscale, r*mscale, 0, Math.PI*2);
+    ctx.fill();
+  });
+  ctx.restore();
 }
 
 function drawCourt1Rally(ctx){
@@ -2711,6 +2835,7 @@ function tryInteract(){
   if(memento){ openMemento(memento); return true; }
   const npc = npcAt(t.x, t.y);
   if(!npc) return false;
+  if(npc.id==='beach-bob') updateBeachBobState(npc);
   openDialogue(npc);
   return true;
 }
@@ -2940,6 +3065,11 @@ function computeObjective(){
   if(!firstTrip.unlocked) return "Head back into Petaling Jaya — there's someone there with more to tell you.";
   if(!drivingSpot.solved) return "Get back in the car at the driveway — they're waiting to take you somewhere.";
   if(!beachTrip.unlocked) return "Look around — there's one more thing to find here.";
+  if(beachEggHuntStarted && !beachEggsAllFound() && !beachEggHuntDone()){
+    const remaining = TURTLE_EGGS.filter(e=>!e.found).length;
+    return `(Optional) ${remaining} turtle egg${remaining===1?'':'s'} still hiding on the beach.`;
+  }
+  if(beachEggsAllFound() && !beachEggHuntDone()) return "(Optional) Bring the turtle eggs back to Bob.";
   return "That's every memory collected. ♥ Thanks for walking through our story.";
 }
 
