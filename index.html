@@ -243,6 +243,33 @@
     background:var(--coral); color:#2a1030; border:none; padding:10px 28px;
     border-radius:24px; cursor:pointer; box-shadow:0 3px 0 var(--coral-dark);
   }
+
+  /* ---------- World map ---------- */
+  #worldMapOverlay{
+    display:none; position:fixed; inset:0; z-index:50;
+    background:linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    padding:24px 18px; overflow-y:auto;
+  }
+  #worldMapOverlay h2{ color:var(--coral); text-align:center; letter-spacing:2px; font-size:18px; margin:6px 0 4px; }
+  #worldMapOverlay p.sub{ text-align:center; opacity:.7; font-size:12px; margin:0 0 16px; }
+  #worldMapCanvas{ position:relative; width:100%; max-width:360px; height:520px; margin:0 auto; }
+  #worldMapCanvas svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .mapEdge{ stroke: rgba(255,255,255,.35); stroke-width:2; }
+  .mapEdgeDashed{ stroke-dasharray:4 4; }
+  .mapNode{
+    position:absolute; transform:translate(-50%,-50%);
+    background:rgba(255,255,255,.08); border:2px solid var(--coral);
+    border-radius:10px; padding:6px 8px; text-align:center;
+    font-size:9px; font-weight:600; line-height:1.25; color:#fff;
+    width:84px;
+  }
+  .mapNode.hub{ border-color:#ffd166; background:rgba(255,209,102,.12); }
+  .mapNode .mapNodeIcon{ font-size:14px; display:block; margin-bottom:2px; }
+  #worldMapCloseBtn{
+    display:block; margin:16px auto 0; font-size:13px; font-weight:600; letter-spacing:1px;
+    background:var(--coral); color:#2a1030; border:none; padding:10px 28px;
+    border-radius:24px; cursor:pointer; box-shadow:0 3px 0 var(--coral-dark);
+  }
 </style>
 </head>
 <body>
@@ -304,6 +331,7 @@
     </div>
     <div id="toolRow">
       <button class="toolBtn" id="journalBtn">Memory Journal</button>
+      <button class="toolBtn" id="worldMapBtn">World Map</button>
       <button class="toolBtn" id="collisionToggleBtn">Show Collision</button>
     </div>
   </div>
@@ -312,6 +340,36 @@
     <p class="sub">memories you've collected together</p>
     <div id="journalList"></div>
     <button id="journalCloseBtn">Close</button>
+  </div>
+  <div id="worldMapOverlay">
+    <h2>WORLD MAP</h2>
+    <p class="sub">how everywhere connects</p>
+    <div id="worldMapCanvas">
+      <svg viewBox="0 0 360 520" preserveAspectRatio="none">
+        <line x1="180" y1="30" x2="180" y2="100" class="mapEdge"/>
+        <line x1="180" y1="100" x2="180" y2="180" class="mapEdge"/>
+        <line x1="180" y1="180" x2="70" y2="180" class="mapEdge"/>
+        <line x1="180" y1="180" x2="290" y2="180" class="mapEdge"/>
+        <line x1="180" y1="180" x2="180" y2="280" class="mapEdge"/>
+        <line x1="180" y1="280" x2="55" y2="380" class="mapEdge"/>
+        <line x1="180" y1="280" x2="145" y2="380" class="mapEdge"/>
+        <line x1="180" y1="280" x2="235" y2="380" class="mapEdge"/>
+        <line x1="180" y1="280" x2="325" y2="380" class="mapEdge"/>
+        <line x1="325" y1="380" x2="325" y2="470" class="mapEdge mapEdgeDashed"/>
+      </svg>
+      <div class="mapNode" style="left:180px; top:30px;"><span class="mapNodeIcon">🏠</span>Room</div>
+      <div class="mapNode" style="left:180px; top:100px;"><span class="mapNodeIcon">🏘️</span>Town</div>
+      <div class="mapNode" style="left:180px; top:180px;"><span class="mapNodeIcon">🏙️</span>TTDI</div>
+      <div class="mapNode" style="left:70px; top:180px;"><span class="mapNodeIcon">📱</span>Kay Aun's House</div>
+      <div class="mapNode" style="left:290px; top:180px;"><span class="mapNodeIcon">💪</span>Gym</div>
+      <div class="mapNode hub" style="left:180px; top:280px;"><span class="mapNodeIcon">🏢</span>Petaling Jaya</div>
+      <div class="mapNode" style="left:55px; top:380px;"><span class="mapNodeIcon">🍖</span>Sae Ma Eul</div>
+      <div class="mapNode" style="left:145px; top:380px;"><span class="mapNodeIcon">🏸</span>Badminton Courts</div>
+      <div class="mapNode" style="left:235px; top:380px;"><span class="mapNodeIcon">🛍️</span>PUF Boutique (Mall)</div>
+      <div class="mapNode" style="left:325px; top:380px;"><span class="mapNodeIcon">🚗</span>Driveway</div>
+      <div class="mapNode" style="left:325px; top:470px;"><span class="mapNodeIcon">🏖️</span>Pulau Redang</div>
+    </div>
+    <button id="worldMapCloseBtn">Close</button>
   </div>
 </div>
 <script>
@@ -3117,6 +3175,13 @@ function closeJournal(){
   document.getElementById('journalOverlay').style.display = 'none';
 }
 
+function openWorldMap(){
+  document.getElementById('worldMapOverlay').style.display = 'block';
+}
+function closeWorldMap(){
+  document.getElementById('worldMapOverlay').style.display = 'none';
+}
+
 const FRAME_MS = 1000/60; // reference frame length that existing per-frame speed constants were tuned against
 let lastFrameTime = null;
 
@@ -3196,6 +3261,8 @@ function startGame(){
   document.getElementById('photoViewer').addEventListener('click', closePhotoViewer);
   document.getElementById('journalBtn').addEventListener('click', openJournal);
   document.getElementById('journalCloseBtn').addEventListener('click', closeJournal);
+  document.getElementById('worldMapBtn').addEventListener('click', openWorldMap);
+  document.getElementById('worldMapCloseBtn').addEventListener('click', closeWorldMap);
   initEditor();
   loop();
 }
