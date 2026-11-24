@@ -1371,7 +1371,7 @@ const NPCS = [
   {
     id: 'beach-liz',
     map: 'beach',
-    x: 57, y: 4,
+    x: 58, y: 4,
     facing: 'down',
     sprite: 'Zara',
     name: 'Liz',
@@ -1402,9 +1402,11 @@ function updateBeachBobState(npc){
   } else if(beachEggsAllFound()){
     npc.dialogue = [
       "Wait — you actually found all five? Let me see.",
-      "...yep, every single one. Nicely done."
+      "...yep, every single one. Nicely done.",
+      "Go talk to Kay Aun and Liz — let them tell you about the whole experience."
     ];
-    npc.followupMementoId = 'turtle-egg-reward';
+    npc.memoryId = 'turtle-egg-hunt';
+    delete npc.followupMementoId;
   } else if(beachEggHuntStarted){
     const remaining = TURTLE_EGGS.filter(e=>!e.found).length;
     npc.dialogue = [
@@ -1703,21 +1705,6 @@ const MEMENTOS = [
     img: TURTLE_SWIM_SRC,
     caption: "The whole reason we were out there in the first place.",
     memoryId: 'turtle-swim-clip'
-  },
-  {
-    id: 'turtle-egg-reward',
-    map: null,
-    tiles: [],
-    speaker: 'Bob',
-    img: BEACH_TRIP_PHOTOS_SRC,
-    caption: "Proof it was worth it — turtle eggs, hatchlings, and the two of them, sandfly bites and all.",
-    memoryId: 'turtle-egg-hunt',
-    afterPhoto: [
-      "Nice work, Turtle Guardian. Every single nest, accounted for.",
-      "That's the whole reason they went out there in the first place — not for a relaxing holiday, but for this.",
-      "Worth it, right?",
-      "Go have a look around — there's more to see here now."
-    ]
   }
 ];
 
@@ -2010,6 +1997,7 @@ function draw(){
     }
   }
   if(currentMapId === 'driveway') drawDirectionSign(gctx, zoom, 49*TILE, 18.6*TILE, 'Petaling Jaya', 'right');
+  if(currentMapId === 'beach') drawDirectionSign(gctx, zoom, 67*TILE, 2.6*TILE, 'Driveway', 'right');
   if(currentMapId === 'celadon') { drawDirectionSign(gctx, zoom, 58.5*TILE, 13*TILE, 'TTDI', 'right'); drawDirectionSign(gctx, zoom, 1.2*TILE, 23*TILE, 'Driveway', 'left'); }
   if(currentMapId === 'city') drawDirectionSign(gctx, zoom, 1.5*TILE, 16*TILE, 'Petaling Jaya', 'left');
   gctx.restore();
